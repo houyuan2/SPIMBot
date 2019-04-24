@@ -1,0 +1,2 @@
+# SPIMBot
+UIUC CS233 Spring 2019 SPIMBot
