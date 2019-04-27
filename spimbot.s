@@ -49,17 +49,24 @@ FINISH_APPLIANCE_INSTANT = 0xffff0078
 PRINT_INT_ADDR = 0xffff0080
 
 puzzle:      .word 0:452
-# 0: puzzle is requested but not arrive 
-# 1: puzzle is there and has not start solving 
-# 2: puzzle is solving but not finish 
+# 0: puzzle is requested but not arrive
+# 1: puzzle is there and has not start solving
+# 2: puzzle is solving but not finish
 # 3: puzzle is finished
-puzzle_stage: .word 4 
+puzzle_stage: .word 4
 move_text:   .word 4
 
 order_fetch: .word 24
 order_0: .word 48
 order_1: .word 48
 order_2: .word 48
+
+#arctan constants
+three: 	.float  3.0
+five:  .float  5.0
+PI:    .float  3.141592
+F180:  .float 180.0
+
 .text
 main:
 	# Construct interrupt mask
@@ -75,26 +82,26 @@ main:
 
     sw $0, puzzle_stage # set puzzle stage to 0
 
-    la $s0, order_fetch
-    sw $s0, GET_TURNIN_ORDER
+    # la $s0, order_fetch
+    # sw $s0, GET_TURNIN_ORDER
 
-    lw $a0, 0($s0)
-    lw $a1, 4($s0)
-    la $a2, order_0
-    jal decode_request
-
-    lw $a0, 8($s0)
-    lw $a1, 12($s0)
-    la $a2, order_1
-    jal decode_request
-
-    lw $a0, 16($s0)
-    lw $a1, 20($s0)
-    la $a2, order_2
-    jal decode_request
+    # lw $a0, 0($s0)
+    # lw $a1, 4($s0)
+    # la $a2, order_0
+    # jal decode_request
+		#
+    # lw $a0, 8($s0)
+    # lw $a1, 12($s0)
+    # la $a2, order_1
+    # jal decode_request
+		#
+    # lw $a0, 16($s0)
+    # lw $a1, 20($s0)
+    # la $a2, order_2
+    # jal decode_request
 
 infinite:
-    # jal mission_control
+  jal mission_control
 	j infinite
 
 mission_control:
@@ -131,7 +138,11 @@ movement:
     li $t0, 6
     # sw $t0, move_text
     # la $t0, move_text
-    sw $t0, PRINT_INT_ADDR
+    # sw $t0, PRINT_INT_ADDR
+
+		li $a0, 60
+		li $a1, 90
+		jal findAngle
 
     lw  $ra, 0($sp)
     lw	$s0, 4($sp)
@@ -140,6 +151,47 @@ movement:
     lw  $s3, 16($sp)
     add $sp, $sp, 20
     jr $ra
+
+		findAngle:
+			sub   $sp, $sp, 12
+			sw    $ra, 0($sp)
+			sw    $s0, 4($sp)
+			sw    $s1, 8($sp)
+			move  	$s0, $a0 			# s0 = a0
+			move  	$s1, $a1			# s1 = a1
+			lw		$t0, BOT_X		# t0 = BOT_X x    a0 = x1 targetX
+			lw    $t1, BOT_Y    # t1 = BOT_Y y		a1 = y1 targetY
+			bne   $t0, $s0, not_same
+			bne   $t1, $s1, not_same
+			sw    $zero, VELOCITY
+			lw    $ra, 0($sp)
+			lw    $s0, 4($sp)
+			lw    $s1, 8($sp)
+			add   $sp, $sp, 12
+			jr		$ra
+		not_same:
+			sub   $t2, $s0, $t0		# t2 = x
+			sub   $t3, $s1, $t1   # t3 = y
+			move  $a0, $t2
+			move  $a1, $t3
+			jal   sb_arctan
+			sw    $v0, ANGLE
+			sw    $v0, PRINT_INT_ADDR
+			li    $t4, 1
+			sw    $t4, ANGLE_CONTROL
+			add   $t4, $t4, 9
+			sw    $t4, VELOCITY
+		# moving:
+		# 	lw    $t5, BOT_X
+		# 	lw    $t6, BOT_Y
+		# 	blt		$t5, $s0, moving
+		# 	blt   $t6, $s1, moving	# if  <  then
+		# 	sw    $zero, VELOCITY
+			lw    $ra, 0($sp)
+			lw    $s0, 4($sp)
+			lw    $s1, 8($sp)
+			add   $sp, $sp, 12
+			jr		$ra
 
 # puzzle_solver
 floodfill:
@@ -402,9 +454,9 @@ i_outer_end:
 decode_request:
 	sub		$sp, $sp, 4
 	sw		$ra, 0($sp)		# save $ra on stack
-	
+
 	li		$t0, 0
-	
+
 first_loop:
 	bge 	$t0, 6, intermediate_bits	#for (int i = 0; i < 6; ++i)
 	and		$t1, $a0, 0x1f	#array[i] = lo & 0x0000001f;
@@ -414,16 +466,16 @@ first_loop:
 	srl		$a0, $a0, 5		#lo = lo >> 5;
 	add		$t0, $t0, 1
 	j first_loop
-	
+
 intermediate_bits:
 	sll		$t0, $a1, 2		#unsigned upper_three_bits = (hi << 2) & 0x0000001f;
 	and		$t0, $t0, 0x1f
 	or		$t0, $t0, $a0	#array[6] = upper_three_bits | lo;
 	sw		$t0, 24($a2)
 	srl		$a1, $a1, 3		#hi = hi >> 3;
-	
+
 	li		$t0, 7
-	
+
 second_loop:
 	bge 	$t0, 12, end	#for (int i = 7; i < 12; ++i)
 	and		$t1, $a1, 0x1f	#array[i] = hi & 0x0000001f;
@@ -433,11 +485,66 @@ second_loop:
 	srl		$a1, $a1, 5		#hi = hi >> 5;
 	add		$t0, $t0, 1
 	j second_loop
-	
+
 end:
 	lw		$ra, 0($sp)
 	add		$sp, $sp, 4
 	jr		$ra
+
+	sb_arctan:
+    li      $v0, 0           # angle = 0;
+
+    abs     $t0, $a0         # get absolute values
+    abs     $t1, $a1
+    ble     $t1, $t0, no_TURN_90
+
+    ## if (abs(y) > abs(x)) { rotate 90 degrees }
+    move    $t0, $a1         # int temp = y;
+    neg     $a1, $a0         # y = -x;
+    move    $a0, $t0         # x = temp;
+    li      $v0, 90          # angle = 90;
+
+no_TURN_90:
+    bgez    $a0, pos_x       # skip if (x >= 0)
+
+    ## if (x < 0)
+    add     $v0, $v0, 180    # angle += 180;
+
+pos_x:
+    mtc1    $a0, $f0
+    mtc1    $a1, $f1
+    cvt.s.w $f0, $f0         # convert from ints to floats
+    cvt.s.w $f1, $f1
+
+    div.s   $f0, $f1, $f0    # float v = (float) y / (float) x;
+
+    mul.s   $f1, $f0, $f0    # v^^2
+    mul.s   $f2, $f1, $f0    # v^^3
+    l.s     $f3, three       # load 3.0
+    div.s   $f3, $f2, $f3    # v^^3/3
+    sub.s   $f6, $f0, $f3    # v - v^^3/3
+
+    mul.s   $f4, $f1, $f2    # v^^5
+    l.s     $f5, five        # load 5.0
+    div.s   $f5, $f4, $f5    # v^^5/5
+    add.s   $f6, $f6, $f5    # value = v - v^^3/3 + v^^5/5
+
+    l.s     $f8, PI          # load PI
+    div.s   $f6, $f6, $f8    # value / PI
+    l.s     $f7, F180        # load 180.0
+    mul.s   $f6, $f6, $f7    # 180.0 * value / PI
+
+    cvt.w.s $f6, $f6         # convert "delta" back to integer
+    mfc1    $t0, $f6
+    add     $v0, $v0, $t0    # angle += delta
+
+    bge     $v0, 0, sb_arc_tan_end
+    # negative value received.
+    li      $t0, 360
+    add     $v0, $t0, $v0
+
+sb_arc_tan_end:
+    jr      $ra
 
 .kdata
 chunkIH:    .space 32
