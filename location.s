@@ -54,16 +54,16 @@ u2chop:
   bne $a2, 6, counter
   j   u2
 counter:
-  li  $v0, 7  #x=7
-  li  $v1, 6  #y=6
+  li  $v0, 6  #x=7
+  li  $v1, 7  #y=6
   jr  $ra
 u1:
-  li  $v0, 3
-  li  $v1, 2
+  li  $v0, 2
+  li  $v1, 3
   jr  $ra
 u2:
-  li  $v0, 3
-  li  $v1, 5
+  li  $v0, 5
+  li  $v1, 3
   jr  $ra
 # right spimbot
 right:
@@ -114,14 +114,14 @@ u4chop:
   bne $a2, 6, counterR
   j   u4
 counterR:
-  li  $v0, 7  #x=7
-  li  $v1, 8  #y=8
+  li  $v0, 8  #x=7
+  li  $v1, 7  #y=8
   jr  $ra
 u3:
-  li  $v0, 3
-  li  $v1, 9
+  li  $v0, 9
+  li  $v1, 3
   jr  $ra
 u4:
-  li  $v0, 3
-  li  $v1, 12
+  li  $v0, 12
+  li  $v1, 3
   jr  $ra
