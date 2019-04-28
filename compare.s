@@ -2,6 +2,8 @@
 
 
 Compare_current_order:
+	sub   $sp, $sp, 4
+	sw    $ra, 0($sp)
 	la		$t0, order_success
 	lw    $t0, 0($t0)
 	beq   $t0, -1, compare_end
@@ -70,7 +72,11 @@ compare_loop:
 	j     compare_loop
 compare_pass:
 	li    $v0, 1
+	lw    $ra, 0($sp)
+	add   $sp, $sp, 4
 	jr    $ra
 compare_end:
 	li    $v0, 0
+	lw    $ra, 0($sp)
+	add   $sp, $sp, 4
 	jr    $ra
