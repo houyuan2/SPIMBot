@@ -79,7 +79,7 @@ process_0: .word 48
 process_1: .word 48
 process_2: .word 48
 counter_fetch: .word 8
-counter: .word 48
+shared_counter: .word 48
 neededIngredient: .word 48
 
 inventory: .word 16
@@ -230,7 +230,7 @@ update:
 
     lw $a0, 0($s0)
     lw $a1, 4($s0)
-    la $a2, counter
+    la $a2, shared_counter
     jal decode_request
 
     # clear neededIngredient
