@@ -37,7 +37,7 @@ move_to_order_2:
   li    $a1, 280
   jal   findAngle
   j     No_order
-right_side_order_1:
+right_side_order_2:
   li    $a0, 260
   li    $a1, 280
   jal   findAngle
