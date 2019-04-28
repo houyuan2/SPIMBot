@@ -1358,7 +1358,7 @@ end:
 	add		$sp, $sp, 4
 	jr		$ra
 
-	sb_arctan:
+sb_arctan:
     li      $v0, 0           # angle = 0;
 
     abs     $t0, $a0         # get absolute values
