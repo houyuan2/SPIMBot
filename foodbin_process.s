@@ -54,6 +54,10 @@ foodbin_lettuce_uncut:
     jal applicance_location
     j foodbin_end 
 foodbin_end:
+    move $a0, $v0
+    move $a1, $v1
+    jal findAngle
+
     lw  $ra, 0($sp)
     add $sp, $sp, 4
     jr  $ra
