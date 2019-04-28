@@ -63,6 +63,8 @@ bonk_flag:  .word 4 #0: nothing, 1: just bonked
 
 location_switch: .word 4  #0: counter, #1: order, #2: food, #3 applicance
 
+order_success: .word 4  # -1: nothing success
+
 #arctan constants
 three: 	.float  3.0
 five:  .float  5.0
@@ -103,6 +105,13 @@ main:
 
   # set bonk_flag to 0
   sw  $0, bonk_flag
+
+  # set location flag
+  sw  $0, location_switch # next position: counter
+
+  # set order flag
+  li  $t0, -1
+  sw  $t0, order_success
 
   # set up left or right flag
   lw  $t0, BOT_X
@@ -147,29 +156,7 @@ keep_moving:
   li      $a0, 150
   li      $a1, 200
   jal     findAngle
-  # move bot to the start location
-#   lw  $t0, side
-#   beq $t0, 1, move_start_right
-#   # spawn left
-#   li  $a0, 10
-#   li  $a1, 45
-#   li  $t0, 0
-# move_start_loop_left:
-#   bgt $t0, 250, move_start_end
-#   jal findAngle
-#   j move_start_loop_left
-# move_start_right:
-#   li  $a0, 290
-#   li  $a1, 45
-#   li  $t0, 0
-# move_start_loop_right:
-#   bgt $t0, 150, move_start_end
-#   jal findAngle
-#   j move_start_loop_right
-# move_start_end:
-#   li  $a0, 140
-#   li  $a1, 140
-#   jal findAngle
+
 infinite:
   jal mission_control
 	j infinite
