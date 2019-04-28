@@ -204,6 +204,7 @@ movement:
     beq $t0, 3, applicance_movement
 counter_movement:
     # order 
+
     # counter raw food
     # food bin
     j mission_control_end
@@ -430,6 +431,41 @@ u4:
   li  $v0, 12
   li  $v1, 3
   jr  $ra
+
+findAngle:
+	sub   $sp, $sp, 12
+	sw    $ra, 0($sp)
+	sw    $s0, 4($sp)
+	sw    $s1, 8($sp)
+	move  	$s0, $a0 			# s0 = a0
+	move  	$s1, $a1			# s1 = a1
+	lw		$t0, BOT_X		# t0 = BOT_X x    a0 = x1 targetX
+	lw    $t1, BOT_Y        # t1 = BOT_Y y		a1 = y1 targetY
+	bne   $t0, $s0, not_same
+	bne   $t1, $s1, not_same
+	sw    $zero, VELOCITY
+	lw    $ra, 0($sp)
+	lw    $s0, 4($sp)
+	lw    $s1, 8($sp)
+	add   $sp, $sp, 12
+	jr		$ra
+not_same:
+	sub   $t2, $s0, $t0		# t2 = x
+	sub   $t3, $s1, $t1   # t3 = y
+	move  $a0, $t2
+	move  $a1, $t3
+	jal   sb_arctan
+	sw    $v0, ANGLE
+	# sw    $v0, PRINT_INT_ADDR
+	li    $t4, 1
+	sw    $t4, ANGLE_CONTROL
+	add   $t4, $t4, 9
+	sw    $t4, VELOCITY
+	lw    $ra, 0($sp)
+	lw    $s0, 4($sp)
+	lw    $s1, 8($sp)
+	add   $sp, $sp, 12
+	jr		$ra
 
 # puzzle_solver
 floodfill:
