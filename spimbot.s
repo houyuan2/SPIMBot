@@ -54,18 +54,29 @@ puzzle:      .word 0:452
 # 2: puzzle is solving but not finish
 # 3: puzzle is finished
 puzzle_stage: .word 4
-move_text:   .word 4
-
-order_fetch: .word 24
-order_0: .word 48
-order_1: .word 48
-order_2: .word 48
 
 #arctan constants
 three: 	.float  3.0
 five:  .float  5.0
 PI:    .float  3.141592
 F180:  .float 180.0
+
+side: .word 4   # 0: left, 1: right
+layout: .word 225
+left_applicance: .word 1
+right_applicance: .word 1
+
+order_fetch: .word 24
+order_0: .word 48
+order_1: .word 48
+order_2: .word 48
+process_0: .word 48
+process_1: .word 48
+process_2: .word 48
+counter: .word 48
+neededIngredient: .word 48
+
+inventory: .word 16
 
 .text
 main:
@@ -81,6 +92,32 @@ main:
     sw $t1, REQUEST_PUZZLE
 
     sw $0, puzzle_stage # set puzzle stage to 0
+
+    # set up left or right flag
+    lw  $t0, BOT_X
+    blt $t0, 140, spawn_left
+    li, $t0, 1
+    sw  $t0, side   # set side flag to 1
+    j   side_finish
+spawn_left:
+    sw  $0, side   # set side flag to 0
+side_finish:
+    # set up appliance tag, offset: 32, 35, 39, 42
+    la  $t1, layout
+    sw  $t1, GET_LAYOUT
+    beq $t0, 0, spawn_left_app
+    # set up spawn right app
+    lb  $t2, 39($t1)
+    sb  $t2, right_applicance
+    lb  $t2, 42($t1)
+    sb  $t2, left_applicance
+    j app_finish
+spawn_left_app:
+    lb  $t2, 32($t1)
+    sb  $t2, right_applicance
+    lb  $t2, 35($t1)
+    sb  $t2, left_applicance
+app_finish:
 
     # la $s0, order_fetch
     # sw $s0, GET_TURNIN_ORDER
@@ -136,9 +173,9 @@ puzzle_3:   # submit puzzle and request new one
 
 movement:
 
-	li $a0, 60
-	li $a1, 90
-	jal findAngle
+	# li $a0, 60
+	# li $a1, 90
+	# jal findAngle
 
     lw  $ra, 0($sp)
     lw	$s0, 4($sp)
@@ -172,7 +209,7 @@ not_same:
 	move  $a1, $t3
 	jal   sb_arctan
 	sw    $v0, ANGLE
-	sw    $v0, PRINT_INT_ADDR
+	# sw    $v0, PRINT_INT_ADDR
 	li    $t4, 1
 	sw    $t4, ANGLE_CONTROL
 	add   $t4, $t4, 9
