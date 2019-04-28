@@ -65,6 +65,8 @@ location_switch: .word 4  #0: counter, #1: order, #2: food, #3 applicance
 
 order_success: .word 4  # -1: nothing success
 
+foodbin_stage: .word 4  # 0: top
+
 #arctan constants
 three: 	.float  3.0
 five:  .float  5.0
@@ -112,6 +114,9 @@ main:
   # set order flag
   li  $t0, -1
   sw  $t0, order_success
+
+  # set foodbin flag
+  sw  $0, foodbin_stage
 
   # set up left or right flag
   lw  $t0, BOT_X
@@ -226,19 +231,37 @@ movement:
     beq $t0, 2, food_movement
     beq $t0, 3, applicance_movement
 counter_movement:
-    # order 
+    # order       todo: call movement func based on left or right
+    jal determineOrder
+    lw  $t0, order_success
+    beq $t0, -1, counter_raw_food
+    li  $t0, 1
+    sw  $t0, location_switch  # set location flag to 1
+    j mission_control_end
     # counter raw food
+counter_raw_food:
+    
     # food bin
+counter_food_bin:
+    jal foodbin_switch
+    li  $t0, 2
+    sw  $t0, location_switch  # set location flag to 2
     j mission_control_end
 order_movement:
     jal Compare_current_order
+    beq $v0, 0, order_movement_end  # do nothing if compare fails
+    # submit order if success
+    sw  $0, SUBMIT_ORDER
+    li  $t0, -1
+    sw  $t0, order_success  # reset order success
+order_movement_end:
     li  $a0, 140
     li  $a1, 240
     jal findAngle # moveback to counter
     sw  $0, location_switch # go back to counter after order
     j mission_control_end
 food_movement:  
-    jal foodbin_todo
+    jal foodbin_todo  # location flag in the applicance location
     j mission_control_end
 applicance_movement:  # finish
     jal cook
@@ -630,7 +653,369 @@ foodbin_end:
     move $a0, $v0
     move $a1, $v1
     jal findAngle
-    
+
+    lw  $ra, 0($sp)
+    add $sp, $sp, 4
+    jr  $ra
+  
+  #pass $a0 as order $a1 as process
+compareOrder:
+  sub $sp, $sp, 16
+  sw  $s0, 0($sp)  #order
+  sw  $s1, 4($sp)  #process
+  sw  $s2, 8($sp)  #shared counter
+  sw  $s3, 12($sp)
+  #array from global
+
+  #order_0
+  move  $s0, $a0
+  move  $s1, $a1
+  la  $s2, counter
+  la  $s3, neededIngredient
+  li  $t0, 0
+order0:
+  bge $t0, 12, compare_0
+  mul $t1, $t0, 4 #i*4
+  add $t2, $s0, $t1 #order
+  add $t3, $s1, $t1 #process
+  add $t4, $s3, $t1 #ingredient
+  lw  $t2, 0($t2)
+  lw  $t3, 0($t3)
+  sub $t5, $t2, $t3 #order - process
+  sw  $t5, 0($t4)  #neededingredient[i]
+  add $t0, $t0, 1
+  j   order0
+compare_0:
+#bread 0
+  lw  $t2, 0($s2) #counter
+  lw  $t3, 0($s3) #needed
+  bgt $t3, $t2, fail #needed > counter, fail
+#cheese 1
+  lw  $t2, 4($s2)
+  lw  $t3, 4($t3)
+  bgt $t3, $t2, fail
+#meat 3
+  lw  $t2, 12($s2)
+  lw  $t3, 12($t3)
+  bgt $t3, $t2, fail
+#tomato
+  lw  $t2, 24($s2)
+  lw  $t3, 24($t3)
+  bgt $t3, $t2, fail
+#onion
+  lw  $t2, 32($s2)
+  lw  $t3, 32($t3)
+  bgt $t3, $t2, fail
+#lettuce
+  lw  $t2, 44($s2)
+  lw  $t3, 44($t3)
+  bgt $t3, $t2, fail
+
+  #order0 can be finished
+  li  $t1, 0 #hold
+  lw  $t3, 0($s3)  #needed bread
+  beq $t3, 0, cheese0  #if bread needed = 0, go to cheese
+  li  $t0, 0
+  li  $t4, 0
+  sll $t0, $t0, 16 #bread
+pickBread0:
+  bge $t4, $t3, cheese0
+  sw  $t0, PICKUP
+  add $t1, $t1, 1 #hold+=1
+  add $t4, $t4, 1
+  j   pickBread0
+cheese0:
+  lw  $t3, 4($s3) #cheese needed
+  beq $t3, 0, meat0
+  li  $t0, 1
+  sll $t0, $t0, 16
+  li  $t4, 0
+pickCheese0:
+  bge $t4, $t3, meat0
+  sw  $t0, PICKUP
+  add $t1, $t1, 1
+  add $t4, $t4, 1
+  beq $t1, 4, success
+  j   pickCheese0
+meat0:
+  lw  $t3, 12($s3) #meat needed
+  beq $t3, 0, tomato0
+  li  $t0, 1
+  sll $t0, $t0, 16
+  add $t0, $t0, 1
+  li  $t4, 0
+pickMeat0:
+  bge $t4, $t3, tomato0
+  sw  $t0, PICKUP
+  add $t1, $t1, 1
+  add $t4, $t4, 1
+  beq $t1, 4, success
+  j   pickMeat0
+tomato0:
+  lw  $t3, 24($s3) #tomato needed
+  beq $t3, 0, onion0
+  li  $t0, 1
+  sll $t0, $t0, 16
+  add $t0, $t0, 1
+  li  $t4, 0
+pickTomato0:
+  bge $t4, $t3, onion0
+  sw  $t0, PICKUP
+  add $t1, $t1, 1
+  add $t4, $t4, 1
+  beq $t1, 4, success
+  j   pickTomato0
+onion0:
+  lw  $t3, 32($s3) #tomato needed
+  beq $t3, 0, lettuce0
+  li  $t0, 1
+  sll $t0, $t0, 16
+  add $t0, $t0, 1
+  li  $t4, 0
+pickOnion0:
+  bge $t4, $t3, lettuce0
+  sw  $t0, PICKUP
+  add $t1, $t1, 1
+  beq $t1, 4, success
+  add $t4, $t4, 1
+  j   pickOnion0
+lettuce0:
+  lw  $t3, 44($s3) #lettuce needed
+  beq $t3, 0, success
+  li  $t0, 1
+  sll $t0, $t0, 16
+  add $t0, $t0, 2
+  li  $t4, 0
+pickLettuce0:
+  bge $t4, $t3, success
+  sw  $t0, PICKUP
+  add $t1, $t1, 1
+  add $t4, $t4, 1
+  beq $t1, 4, success
+  j   pickLettuce0
+success:
+  li  $v0, 1
+  lw  $s0, 0($sp)  #order
+  lw  $s1, 4($sp)  #process
+  lw  $s2, 8($sp)  #shared counter
+  lw  $s3, 12($sp)
+  add $sp, $sp, 16
+  jr  $ra
+fail:
+  #flag = 0
+  li  $v0, 0
+  lw  $s0, 0($sp)  #order
+  lw  $s1, 4($sp)  #process
+  lw  $s2, 8($sp)  #shared counter
+  lw  $s3, 12($sp)
+  add $sp, $sp, 16
+  jr  $ra
+
+determineOrder:
+  sub $sp, $sp, 4
+  sw  $ra, 0($sp)
+  la  $a0, order_0
+  la  $a1, process_0
+  jal compareOrder
+  #order_success
+  bne $v0, 1, order1
+  sw  $0, order_success
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
+  jr  $ra
+order1:
+  la  $a0, order_1
+  la  $a1, process_1
+  jal compareOrder
+  bne $v0, 1, order2
+  li  $t0, 1
+  sw  $t0, order_success
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
+  jr  $ra
+order2:
+  la  $a0, order_2
+  la  $a1, process_2
+  jal compareOrder
+  bne $v0, 2, noOrder
+  li  $t0, 2
+  sw  $t0, order_success
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
+  jr  $ra
+noOrder:
+  li  $t0, -1
+  sw  $t0, order_success
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
+  jr  $ra
+
+rawFood:
+  sub $sp, $sp, 4
+  sw  $ra, 0($sp)
+  la  $t1, counter
+  lw  $t0, 8($t1)
+  blt $t0, 4, unwahsedT
+  li  $a0, 2
+  lw  $a1, left_appliance
+  lw  $a2, right_appliance
+  jal appliance_location
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
+  jr  $ra
+unwahsedT:
+  lw  $t0, 20($t1)
+  blt $t0, 4, uncutO
+  li  $a0, 5
+  lw  $a1, left_appliance
+  lw  $a2, right_appliance
+  jal appliance_location
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
+  jr  $ra
+uncutO:
+  lw  $t0, 28($t1)
+  blt $t0, 4, unWunCLettuce
+  li  $a0, 7
+  lw  $a1, left_appliance
+  lw  $a2, right_appliance
+  jal appliance_location
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
+  jr  $ra
+unWunCLettuce:
+  lw  $t0, 36($t1)
+  blt $t0, 4, UnchopL
+  li  $a0, 9
+  lw  $a1, left_appliance
+  lw  $a2, right_appliance
+  jal appliance_location
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
+  jr  $ra
+UnchopL:
+  lw  $t0, 40($t1)
+  blt $t0, 4, end
+  li  $a0, 10
+  lw  $a1, left_appliance
+  lw  $a2, right_appliance
+  jal appliance_location
+end:
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
+  jr  $ra
+
+foodbin_switch:
+    sub $sp, $sp, 4
+    sw  $ra, 0($sp)
+
+    lw  $t0, side
+    lw  $t1, foodbin_stage
+    beq $t0, 1, foodbin_right
+    # left side
+    beq $t1, 0, foodbin_left_0
+    beq $t1, 1, foodbin_left_1
+    beq $t1, 2, foodbin_left_2
+foodbin_left_0:
+    li  $a0, 10
+    li  $a1, 70
+    jal findAngle
+    j   foodbin_switch_end
+foodbin_left_1:
+    li  $a0, 10
+    li  $a1, 150
+    jal findAngle
+    j   foodbin_switch_end
+foodbin_left_2:
+    li  $a0, 10
+    li  $a1, 230
+    jal findAngle
+    j   foodbin_switch_end
+foodbin_right:
+    # right side
+    beq $t1, 0, foodbin_right_0
+    beq $t1, 1, foodbin_right_1
+    beq $t1, 2, foodbin_right_2
+foodbin_right_0:
+    li  $a0, 290
+    li  $a1, 70
+    jal findAngle
+    j   foodbin_switch_end
+foodbin_right_1:
+    li  $a0, 290
+    li  $a1, 150
+    jal findAngle
+    j   foodbin_switch_end
+foodbin_right_2:
+    li  $a0, 290
+    li  $a1, 230
+    jal findAngle
+    j   foodbin_switch_end
+foodbin_switch_end:
+    lw  $ra, 0($sp)
+    add $sp, $sp, 4
+    jr $ra
+
+foodbin_todo:
+    sub $sp, $sp, 4
+	  sw  $ra, 0($sp)
+    sw  $0,  PICKUP
+    sw  $0,  PICKUP
+    sw  $0,  PICKUP
+    sw  $0,  PICKUP
+
+    la  $t0, inventory
+    sw  $t0, GET_INVENTORY
+
+    lw  $t0, 0($t0) # first food
+    and $t1, $t0, 0xffff0000
+    srl $t1, $t1, 16 # food id
+    and $t2, $t0, 0x00000001 # process level
+
+    lw  $a1, left_applicance
+    lw  $a2, right_applicance
+
+    beq $t1, 0, foodbin_bread
+    beq $t1, 1, foodbin_cheese
+    beq $t1, 2, foodbin_meat
+    beq $t1, 3, foodbin_tomato
+    beq $t1, 4, foodbin_onion
+    beq $t1, 5, foodbin_lettuce
+    j   foodbin_end
+foodbin_bread:
+    lw  $a0, 0
+    jal applicance_location
+    j foodbin_end
+foodbin_cheese:
+    lw  $a0, 1
+    jal applicance_location
+    j foodbin_end
+foodbin_meat:
+    lw  $a0, 2
+    jal applicance_location
+    j foodbin_end
+foodbin_tomato:
+    lw  $a0, 5
+    jal applicance_location
+    j foodbin_end
+foodbin_onion:
+    lw  $a0, 7
+    jal applicance_location
+    j foodbin_end
+foodbin_lettuce:
+    beq $t2, 1, foodbin_lettuce_uncut
+    lw  $a0, 9
+    jal applicance_location
+    j foodbin_end  
+foodbin_lettuce_uncut:  
+    lw  $a0, 10
+    jal applicance_location
+    j foodbin_end 
+foodbin_end:
+    move $a0, $v0
+    move $a1, $v1
+    jal findAngle
+
     lw  $ra, 0($sp)
     add $sp, $sp, 4
     jr  $ra
