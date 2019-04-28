@@ -204,7 +204,6 @@ movement:
     beq $t0, 3, applicance_movement
 counter_movement:
     # order 
-
     # counter raw food
     # food bin
     j mission_control_end
@@ -214,9 +213,10 @@ order_movement:
     jal findAngle # moveback to counter
     sw  $0, location_switch # go back to counter after order
     j mission_control_end
-food_movement:
+food_movement:  
+
     j mission_control_end
-applicance_movement:
+applicance_movement:  # finish
     jal cook
     li  $a0, 140
     li  $a1, 140
@@ -466,6 +466,86 @@ not_same:
 	lw    $s1, 8($sp)
 	add   $sp, $sp, 12
 	jr		$ra
+
+Compare_current_order:
+	sub   $sp, $sp, 4
+	sw    $ra, 0($sp)
+	la		$t0, order_success
+	lw    $t0, 0($t0)
+	beq   $t0, -1, compare_end
+	beq   $t0, 0, copare_order_0
+	beq   $t0, 1, copare_order_1
+	beq   $t0, 2, copare_order_2
+compare_order_0:
+	la 		$t0, order_fetch
+	sw 		$t0, GET_TURNIN_ORDER
+	lw 		$a0, 0($t0)
+	lw 		$a1, 4($t0)
+	la 		$a2, order_0
+	jal 	decode_request
+	la 		$t0, order_fetch
+	sw 		$t0, GET_TURNIN_USERS
+	lw 		$a0, 0($t0)
+	lw 		$a1, 4($t0)
+	la 		$a2, process_0
+	jal 	decode_request
+	la    $t0, order_0
+	la    $t1, process_0
+	li    $t2, 0
+	j     compare_loop
+compare_order_1:
+	la 		$t0, order_fetch
+	sw 		$t0, GET_TURNIN_ORDER
+	lw 		$a0, 0($t0)
+	lw 		$a1, 4($t0)
+	la 		$a2, order_1
+	jal 	decode_request
+	la 		$t0, order_fetch
+	sw 		$t0, GET_TURNIN_USERS
+	lw 		$a0, 0($t0)
+	lw 		$a1, 4($t0)
+	la 		$a2, process_1
+	jal 	decode_request
+	la    $t0, order_1
+	la    $t1, process_1
+	li    $t2, 0
+	j     compare_loop
+compare_order_2:
+	la 		$t0, order_fetch
+	sw 		$t0, GET_TURNIN_ORDER
+	lw 		$a0, 0($t0)
+	lw 		$a1, 4($t0)
+	la 		$a2, order_2
+	jal 	decode_request
+	la 		$t0, order_fetch
+	sw 		$t0, GET_TURNIN_USERS
+	lw 		$a0, 0($t0)
+	lw 		$a1, 4($t0)
+	la 		$a2, process_2
+	jal 	decode_request
+	la    $t0, order_2
+	la    $t1, process_2
+	li    $t2, 0
+compare_loop:
+	bge   $t2, 12, compare_pass
+	mul   $t3, $t2, 4
+	add   $t4, $t3, $t0
+	add   $t5, $t3, $t1
+	lw    $t4, 0($t4)
+	lw    $t5, 0($t5)
+	add   $t2, $t2, 1
+	bne   $t4, $t5, compare_end
+	j     compare_loop
+compare_pass:
+	li    $v0, 1
+	lw    $ra, 0($sp)
+	add   $sp, $sp, 4
+	jr    $ra
+compare_end:
+	li    $v0, 0
+	lw    $ra, 0($sp)
+	add   $sp, $sp, 4
+	jr    $ra
 
 # puzzle_solver
 floodfill:
