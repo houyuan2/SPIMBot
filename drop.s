@@ -1,4 +1,4 @@
-Drop:
+cook:
   li      $t0, 0
 drop_loop:
   bge     $t0, 4, appliance_done

@@ -196,9 +196,32 @@ movement:
     beq $t0, 0, mission_control_end # do nothing if not bonked
     sw  $0, bonk_flag   # set bonk flag back to 0
     jal update
-	# li $a0, 60
-	# li $a1, 90
-	# jal findAngle
+
+    lw  $t0, location_switch
+    beq $t0, 0, counter_movement
+    beq $t0, 1, order_movement
+    beq $t0, 2, food_movement
+    beq $t0, 3, applicance_movement
+counter_movement:
+    # order 
+    # counter raw food
+    # food bin
+    j mission_control_end
+order_movement:
+    li  $a0, 140
+    li  $a1, 240
+    jal findAngle # moveback to counter
+    sw  $0, location_switch # go back to counter after order
+    j mission_control_end
+food_movement:
+    j mission_control_end
+applicance_movement:
+    jal cook
+    li  $a0, 140
+    li  $a1, 140
+    jal findAngle # moveback to counter
+    sw  $0, location_switch # go back to counter after appliance
+    j mission_control_end
 
 mission_control_end:
     lw  $ra, 0($sp)
@@ -283,7 +306,7 @@ array_clean_finish:
 
 #
 #check appliance, return next location, $a0 food id  $a1 id of first appliance, $a2 id of the second appliance
-location:
+applicance_location:
 
   lw  $t0,  side   #determine if left or right
   beq $t0, 1, right  #if side == 1, right spimbot
@@ -336,16 +359,16 @@ u2chop:
   bne $a2, 6, counter
   j   u2
 counter:
-  li  $v0, 7  #x=7
-  li  $v1, 6  #y=6
+  li  $v0, 6  #x=7
+  li  $v1, 7  #y=6
   jr  $ra
 u1:
-  li  $v0, 3
-  li  $v1, 2
+  li  $v0, 2
+  li  $v1, 3
   jr  $ra
 u2:
-  li  $v0, 3
-  li  $v1, 5
+  li  $v0, 5
+  li  $v1, 3
   jr  $ra
 # right spimbot
 right:
@@ -396,52 +419,17 @@ u4chop:
   bne $a2, 6, counterR
   j   u4
 counterR:
-  li  $v0, 7  #x=7
-  li  $v1, 8  #y=8
+  li  $v0, 8  #x=7
+  li  $v1, 7  #y=8
   jr  $ra
 u3:
-  li  $v0, 3
-  li  $v1, 9
+  li  $v0, 9
+  li  $v1, 3
   jr  $ra
 u4:
-  li  $v0, 3
-  li  $v1, 12
+  li  $v0, 12
+  li  $v1, 3
   jr  $ra
-
-findAngle:
-	sub   $sp, $sp, 12
-	sw    $ra, 0($sp)
-	sw    $s0, 4($sp)
-	sw    $s1, 8($sp)
-	move  	$s0, $a0 			# s0 = a0
-	move  	$s1, $a1			# s1 = a1
-	lw		$t0, BOT_X		# t0 = BOT_X x    a0 = x1 targetX
-	lw    $t1, BOT_Y        # t1 = BOT_Y y		a1 = y1 targetY
-	bne   $t0, $s0, not_same
-	bne   $t1, $s1, not_same
-	sw    $zero, VELOCITY
-	lw    $ra, 0($sp)
-	lw    $s0, 4($sp)
-	lw    $s1, 8($sp)
-	add   $sp, $sp, 12
-	jr		$ra
-not_same:
-	sub   $t2, $s0, $t0		# t2 = x
-	sub   $t3, $s1, $t1   # t3 = y
-	move  $a0, $t2
-	move  $a1, $t3
-	jal   sb_arctan
-	sw    $v0, ANGLE
-	# sw    $v0, PRINT_INT_ADDR
-	li    $t4, 1
-	sw    $t4, ANGLE_CONTROL
-	add   $t4, $t4, 9
-	sw    $t4, VELOCITY
-	lw    $ra, 0($sp)
-	lw    $s0, 4($sp)
-	lw    $s1, 8($sp)
-	add   $sp, $sp, 12
-	jr		$ra
 
 # puzzle_solver
 floodfill:
@@ -841,11 +829,10 @@ interrupt_dispatch:            # Interrupt:
 
 bonk_interrupt:
 	sw 		$0, BONK_ACK
-    #Fill in your code here
-    li      $t1, 1
-    sw      $t1, bonk_flag
-    sw      $0, VELOCITY    # set velocity to 0
-    j       interrupt_dispatch    # see if other interrupts are waiting
+  #Fill in your code here
+  li      $t1, 1
+  sw      $t1, bonk_flag
+  j       interrupt_dispatch    # see if other interrupts are waiting
 
 request_puzzle_interrupt:
 	sw 		$0, REQUEST_PUZZLE_ACK
