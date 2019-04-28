@@ -89,19 +89,19 @@ main:
     # lw $a1, 4($s0)
     # la $a2, order_0
     # jal decode_request
-		#
+		
     # lw $a0, 8($s0)
     # lw $a1, 12($s0)
     # la $a2, order_1
     # jal decode_request
-		#
+		
     # lw $a0, 16($s0)
     # lw $a1, 20($s0)
     # la $a2, order_2
     # jal decode_request
 
 infinite:
-  jal mission_control
+    jal mission_control
 	j infinite
 
 mission_control:
@@ -135,14 +135,10 @@ puzzle_3:   # submit puzzle and request new one
     sw $0, puzzle_stage # set puzzle stage to 0
 
 movement:
-    li $t0, 6
-    # sw $t0, move_text
-    # la $t0, move_text
-    # sw $t0, PRINT_INT_ADDR
 
-		li $a0, 60
-		li $a1, 90
-		jal findAngle
+	li $a0, 60
+	li $a1, 90
+	jal findAngle
 
     lw  $ra, 0($sp)
     lw	$s0, 4($sp)
@@ -152,46 +148,40 @@ movement:
     add $sp, $sp, 20
     jr $ra
 
-		findAngle:
-			sub   $sp, $sp, 12
-			sw    $ra, 0($sp)
-			sw    $s0, 4($sp)
-			sw    $s1, 8($sp)
-			move  	$s0, $a0 			# s0 = a0
-			move  	$s1, $a1			# s1 = a1
-			lw		$t0, BOT_X		# t0 = BOT_X x    a0 = x1 targetX
-			lw    $t1, BOT_Y    # t1 = BOT_Y y		a1 = y1 targetY
-			bne   $t0, $s0, not_same
-			bne   $t1, $s1, not_same
-			sw    $zero, VELOCITY
-			lw    $ra, 0($sp)
-			lw    $s0, 4($sp)
-			lw    $s1, 8($sp)
-			add   $sp, $sp, 12
-			jr		$ra
-		not_same:
-			sub   $t2, $s0, $t0		# t2 = x
-			sub   $t3, $s1, $t1   # t3 = y
-			move  $a0, $t2
-			move  $a1, $t3
-			jal   sb_arctan
-			sw    $v0, ANGLE
-			sw    $v0, PRINT_INT_ADDR
-			li    $t4, 1
-			sw    $t4, ANGLE_CONTROL
-			add   $t4, $t4, 9
-			sw    $t4, VELOCITY
-		# moving:
-		# 	lw    $t5, BOT_X
-		# 	lw    $t6, BOT_Y
-		# 	blt		$t5, $s0, moving
-		# 	blt   $t6, $s1, moving	# if  <  then
-		# 	sw    $zero, VELOCITY
-			lw    $ra, 0($sp)
-			lw    $s0, 4($sp)
-			lw    $s1, 8($sp)
-			add   $sp, $sp, 12
-			jr		$ra
+findAngle:
+	sub   $sp, $sp, 12
+	sw    $ra, 0($sp)
+	sw    $s0, 4($sp)
+	sw    $s1, 8($sp)
+	move  	$s0, $a0 			# s0 = a0
+	move  	$s1, $a1			# s1 = a1
+	lw		$t0, BOT_X		# t0 = BOT_X x    a0 = x1 targetX
+	lw    $t1, BOT_Y        # t1 = BOT_Y y		a1 = y1 targetY
+	bne   $t0, $s0, not_same
+	bne   $t1, $s1, not_same
+	sw    $zero, VELOCITY
+	lw    $ra, 0($sp)
+	lw    $s0, 4($sp)
+	lw    $s1, 8($sp)
+	add   $sp, $sp, 12
+	jr		$ra
+not_same:
+	sub   $t2, $s0, $t0		# t2 = x
+	sub   $t3, $s1, $t1   # t3 = y
+	move  $a0, $t2
+	move  $a1, $t3
+	jal   sb_arctan
+	sw    $v0, ANGLE
+	sw    $v0, PRINT_INT_ADDR
+	li    $t4, 1
+	sw    $t4, ANGLE_CONTROL
+	add   $t4, $t4, 9
+	sw    $t4, VELOCITY
+	lw    $ra, 0($sp)
+	lw    $s0, 4($sp)
+	lw    $s1, 8($sp)
+	add   $sp, $sp, 12
+	jr		$ra
 
 # puzzle_solver
 floodfill:
@@ -202,23 +192,23 @@ floodfill:
 #       if (row >= puzzle->NUM_ROWS || col >= puzzle->NUM_COLS) {
 #               return marker;
 #       }
-        slt     $t0, $a2, 0
-        slt     $t1, $a3, 0
-        or      $t0, $t1, $t0
-        beq     $t0, 0, f_end_if1
-        move    $v0, $a1
-        jr      $ra
+    slt     $t0, $a2, 0
+    slt     $t1, $a3, 0
+    or      $t0, $t1, $t0
+    beq     $t0, 0, f_end_if1
+    move    $v0, $a1
+    jr      $ra
 f_end_if1:
 
-        lw      $t0, 0($a0)
-        lw      $t1, 4($a0)
-        sge     $t0, $a2, $t0
-        sge     $t1, $a3, $t1
-        or      $t0, $t1, $t0
+    lw      $t0, 0($a0)
+    lw      $t1, 4($a0)
+    sge     $t0, $a2, $t0
+    sge     $t1, $a3, $t1
+    or      $t0, $t1, $t0
 
-        beq     $t0, 0, f_end_if2
-        move    $v0, $a1
-        jr      $ra
+    beq     $t0, 0, f_end_if2
+    move    $v0, $a1
+    jr      $ra
 f_end_if2:
 
 
@@ -226,131 +216,131 @@ f_end_if2:
 #       if (board[row][col] != ’#’) {
 #               return marker;
 #       }
-        lw      $t0, 0($a0)
-        lw      $t1, 4($a0)
-        mul     $t2, $a2, $t1
-        add     $t2, $t2, $a3
-        add     $t2, $t2, $a0
-        add     $t2, $t2, 8
-        lb      $t3, 0($t2)
+    lw      $t0, 0($a0)
+    lw      $t1, 4($a0)
+    mul     $t2, $a2, $t1
+    add     $t2, $t2, $a3
+    add     $t2, $t2, $a0
+    add     $t2, $t2, 8
+    lb      $t3, 0($t2)
 
-        beq     $t3, '#', f_endif_3
-        move    $v0, $a1
-        jr      $ra
+    beq     $t3, '#', f_endif_3
+    move    $v0, $a1
+    jr      $ra
 f_endif_3:
 
 f_recur:
-        sub     $sp, $sp, 88
-        sw      $ra, 0($sp)
-        sw      $s0, 4($sp)
-        sw      $s1, 8($sp)
-        sw      $s2, 12($sp)
-        sw      $s3, 16($sp)
-        sw      $t3, 48($sp)
-        sw      $t4, 52($sp)
-        sw      $t5, 56($sp)
-        sw      $t6, 60($sp)
-        sw      $t7, 64($sp)
-        sw      $t8, 68($sp)
-        sw      $t9, 72($sp)
-        sw      $s4, 20($sp)
-        sw      $s5, 24($sp)
-        sw      $s6, 28($sp)
-        sw      $s7, 32($sp)
-        sw      $t0, 36($sp)
-        sw      $t1, 40($sp)
-        sw      $t2, 44($sp)
-        sw      $a0, 76($sp)
-        sw      $a1, 80($sp)
-        sw      $a2, 84($sp)
+    sub     $sp, $sp, 88
+    sw      $ra, 0($sp)
+    sw      $s0, 4($sp)
+    sw      $s1, 8($sp)
+    sw      $s2, 12($sp)
+    sw      $s3, 16($sp)
+    sw      $t3, 48($sp)
+    sw      $t4, 52($sp)
+    sw      $t5, 56($sp)
+    sw      $t6, 60($sp)
+    sw      $t7, 64($sp)
+    sw      $t8, 68($sp)
+    sw      $t9, 72($sp)
+    sw      $s4, 20($sp)
+    sw      $s5, 24($sp)
+    sw      $s6, 28($sp)
+    sw      $s7, 32($sp)
+    sw      $t0, 36($sp)
+    sw      $t1, 40($sp)
+    sw      $t2, 44($sp)
+    sw      $a0, 76($sp)
+    sw      $a1, 80($sp)
+    sw      $a2, 84($sp)
 
 #       board[row][col] = marker;
-        sb      $a1, 0($t2)
+    sb      $a1, 0($t2)
 
-        move    $s0, $a0
-        move    $s1, $a1
-        move    $s2, $a2
-        move    $s3, $a3
+    move    $s0, $a0
+    move    $s1, $a1
+    move    $s2, $a2
+    move    $s3, $a3
 
 #       floodfill(puzzle, marker, row + 1, col + 1);
-        move    $a0, $s0
-        move    $a1, $s1
-        add     $a2, $s2, 1
-        add     $a3, $s3, 1
-        jal     floodfill
+    move    $a0, $s0
+    move    $a1, $s1
+    add     $a2, $s2, 1
+    add     $a3, $s3, 1
+    jal     floodfill
 
 #       floodfill(puzzle, marker, row + 1, col + 0);
-        move    $a0, $s0
-        move    $a1, $s1
-        add     $a2, $s2, 1
-        add     $a3, $s3, 0
-        jal     floodfill
+    move    $a0, $s0
+    move    $a1, $s1
+    add     $a2, $s2, 1
+    add     $a3, $s3, 0
+    jal     floodfill
 #       floodfill(puzzle, marker, row + 1, col - 1);
-        move    $a0, $s0
-        move    $a1, $s1
-        add     $a2, $s2, 1
-        add     $a3, $s3, -1
-        jal     floodfill
+    move    $a0, $s0
+    move    $a1, $s1
+    add     $a2, $s2, 1
+    add     $a3, $s3, -1
+    jal     floodfill
 #       floodfill(puzzle, marker, row, col + 1);
-        move    $a0, $s0
-        move    $a1, $s1
-        add     $a2, $s2, 0
-        add     $a3, $s3, 1
-        jal     floodfill
+    move    $a0, $s0
+    move    $a1, $s1
+    add     $a2, $s2, 0
+    add     $a3, $s3, 1
+    jal     floodfill
 #       floodfill(puzzle, marker, row, col - 1);
-        move    $a0, $s0
-        move    $a1, $s1
-        add     $a2, $s2, 0
-        add     $a3, $s3, -1
-        jal     floodfill
+    move    $a0, $s0
+    move    $a1, $s1
+    add     $a2, $s2, 0
+    add     $a3, $s3, -1
+    jal     floodfill
 #       floodfill(puzzle, marker, row - 1, col + 1);
-        move    $a0, $s0
-        move    $a1, $s1
-        add     $a2, $s2, -1
-        add     $a3, $s3, 1
-        jal     floodfill
+    move    $a0, $s0
+    move    $a1, $s1
+    add     $a2, $s2, -1
+    add     $a3, $s3, 1
+    jal     floodfill
 #       floodfill(puzzle, marker, row - 1, col + 0);
-        move    $a0, $s0
-        move    $a1, $s1
-        add     $a2, $s2, -1
-        add     $a3, $s3, 0
-        jal     floodfill
+    move    $a0, $s0
+    move    $a1, $s1
+    add     $a2, $s2, -1
+    add     $a3, $s3, 0
+    jal     floodfill
 #       floodfill(puzzle, marker, row - 1, col - 1);
-        move    $a0, $s0
-        move    $a1, $s1
-        add     $a2, $s2, -1
-        add     $a3, $s3, -1
-        jal     floodfill
+    move    $a0, $s0
+    move    $a1, $s1
+    add     $a2, $s2, -1
+    add     $a3, $s3, -1
+    jal     floodfill
 #       return marker + 1;
-        add     $v0, $a1, 1
+    add     $v0, $a1, 1
 f_done:
-        lw      $ra, 0($sp)
-        lw      $s0, 4($sp)
-        lw      $s1, 8($sp)
-        lw      $s2, 12($sp)
-        lw      $s3, 16($sp)
-        lw      $s4, 20($sp)
-        lw      $s5, 24($sp)
-        lw      $s6, 28($sp)
-        lw      $s7, 32($sp)
+    lw      $ra, 0($sp)
+    lw      $s0, 4($sp)
+    lw      $s1, 8($sp)
+    lw      $s2, 12($sp)
+    lw      $s3, 16($sp)
+    lw      $s4, 20($sp)
+    lw      $s5, 24($sp)
+    lw      $s6, 28($sp)
+    lw      $s7, 32($sp)
 
-        lw      $t0, 36($sp)
-        lw      $t1, 40($sp)
-        lw      $t2, 44($sp)
-        lw      $t3, 48($sp)
-        lw      $t4, 52($sp)
-        lw      $t5, 56($sp)
-        lw      $t6, 60($sp)
-        lw      $t7, 64($sp)
-        lw      $t8, 68($sp)
-        lw      $t9, 72($sp)
+    lw      $t0, 36($sp)
+    lw      $t1, 40($sp)
+    lw      $t2, 44($sp)
+    lw      $t3, 48($sp)
+    lw      $t4, 52($sp)
+    lw      $t5, 56($sp)
+    lw      $t6, 60($sp)
+    lw      $t7, 64($sp)
+    lw      $t8, 68($sp)
+    lw      $t9, 72($sp)
 
-        lw      $a0, 76($sp)
-        lw      $a1, 80($sp)
-        lw      $a2, 84($sp)
-        add     $sp, $sp, 88
+    lw      $a0, 76($sp)
+    lw      $a1, 80($sp)
+    lw      $a2, 84($sp)
+    add     $sp, $sp, 88
 
-        jr      $ra
+    jr      $ra
 
 # void islandfill(Puzzle* puzzle) {
 #       char marker = ’A’;
@@ -362,94 +352,94 @@ f_done:
 # }
 
 islandfill:
-        sub     $sp, $sp, 88
-        sw      $ra, 0($sp)
-        sw      $s0, 4($sp)
-        sw      $s1, 8($sp)
-        sw      $s2, 12($sp)
-        sw      $s3, 16($sp)
-        sw      $s4, 20($sp)
-        sw      $s5, 24($sp)
-        sw      $s6, 28($sp)
-        sw      $s7, 32($sp)
-        sw      $t0, 36($sp)
-        sw      $t1, 40($sp)
-        sw      $t2, 44($sp)
-        sw      $t3, 48($sp)
-        sw      $t4, 52($sp)
-        sw      $t5, 56($sp)
-        sw      $t6, 60($sp)
-        sw      $t7, 64($sp)
-        sw      $t8, 68($sp)
-        sw      $t9, 72($sp)
-        sw      $a0, 76($sp)
-        sw      $a1, 80($sp)
-        sw      $a2, 84($sp)
+    sub     $sp, $sp, 88
+    sw      $ra, 0($sp)
+    sw      $s0, 4($sp)
+    sw      $s1, 8($sp)
+    sw      $s2, 12($sp)
+    sw      $s3, 16($sp)
+    sw      $s4, 20($sp)
+    sw      $s5, 24($sp)
+    sw      $s6, 28($sp)
+    sw      $s7, 32($sp)
+    sw      $t0, 36($sp)
+    sw      $t1, 40($sp)
+    sw      $t2, 44($sp)
+    sw      $t3, 48($sp)
+    sw      $t4, 52($sp)
+    sw      $t5, 56($sp)
+    sw      $t6, 60($sp)
+    sw      $t7, 64($sp)
+    sw      $t8, 68($sp)
+    sw      $t9, 72($sp)
+    sw      $a0, 76($sp)
+    sw      $a1, 80($sp)
+    sw      $a2, 84($sp)
 
-        move    $s0, $a0
-        li      $s1, 'A'
-        li      $s2, 0
+    move    $s0, $a0
+    li      $s1, 'A'
+    li      $s2, 0
 
-        lw      $s4, 0($a0)
-        lw      $s5, 4($a0)
+    lw      $s4, 0($a0)
+    lw      $s5, 4($a0)
 
 i_outer_loop:
-        bge     $s2, $s4, i_outer_end
+    bge     $s2, $s4, i_outer_end
 
-        li      $s3, 0
+    li      $s3, 0
 i_inner_loop:
-        bge     $s3, $s5, i_inner_end
+    bge     $s3, $s5, i_inner_end
 
-        #                     marker = floodfill(puzzle,marker,i,j);
-        move    $a0, $s0
-        move    $a1, $s1
-        move    $a2, $s2
-        move    $a3, $s3
-        jal     floodfill
-        move    $s1, $v0
+    # marker = floodfill(puzzle,marker,i,j);
+    move    $a0, $s0
+    move    $a1, $s1
+    move    $a2, $s2
+    move    $a3, $s3
+    jal     floodfill
+    move    $s1, $v0
 
-        # move    $a0, $s0
-        # jal     print_board
+    # move    $a0, $s0
+    # jal     print_board
 
-        add     $s3, $s3, 1
-        j       i_inner_loop
+    add     $s3, $s3, 1
+    j       i_inner_loop
 i_inner_end:
 
-        add     $s2, $s2, 1
+    add     $s2, $s2, 1
 
-        jal mission_control #switch to movement
+    jal mission_control #switch to movement
 
-        j       i_outer_loop
+    j       i_outer_loop
 i_outer_end:
-        li      $t0, 3
-        sw      $t0, puzzle_stage # set puzzle stage to 3
+    li      $t0, 3
+    sw      $t0, puzzle_stage # set puzzle stage to 3
 
-        lw      $ra, 0($sp)
-        lw      $s0, 4($sp)
-        lw      $s1, 8($sp)
-        lw      $s2, 12($sp)
-        lw      $s3, 16($sp)
-        lw      $s4, 20($sp)
-        lw      $s5, 24($sp)
-        lw      $s6, 28($sp)
-        lw      $s7, 32($sp)
+    lw      $ra, 0($sp)
+    lw      $s0, 4($sp)
+    lw      $s1, 8($sp)
+    lw      $s2, 12($sp)
+    lw      $s3, 16($sp)
+    lw      $s4, 20($sp)
+    lw      $s5, 24($sp)
+    lw      $s6, 28($sp)
+    lw      $s7, 32($sp)
 
-        lw      $t0, 36($sp)
-        lw      $t1, 40($sp)
-        lw      $t2, 44($sp)
-        lw      $t3, 48($sp)
-        lw      $t4, 52($sp)
-        lw      $t5, 56($sp)
-        lw      $t6, 60($sp)
-        lw      $t7, 64($sp)
-        lw      $t8, 68($sp)
-        lw      $t9, 72($sp)
+    lw      $t0, 36($sp)
+    lw      $t1, 40($sp)
+    lw      $t2, 44($sp)
+    lw      $t3, 48($sp)
+    lw      $t4, 52($sp)
+    lw      $t5, 56($sp)
+    lw      $t6, 60($sp)
+    lw      $t7, 64($sp)
+    lw      $t8, 68($sp)
+    lw      $t9, 72($sp)
 
-        lw      $a0, 76($sp)
-        lw      $a1, 80($sp)
-        lw      $a2, 84($sp)
-        add     $sp, $sp, 88
-        jr      $ra
+    lw      $a0, 76($sp)
+    lw      $a1, 80($sp)
+    lw      $a2, 84($sp)
+    add     $sp, $sp, 88
+    jr      $ra
 
 decode_request:
 	sub		$sp, $sp, 4
@@ -553,22 +543,22 @@ unhandled_str:    .asciiz "Unhandled interrupt type\n"
 .ktext 0x80000180
 interrupt_handler:
 .set noat
-        move      $k1, $at        # Save $at
+    move      $k1, $at        # Save $at
 .set at
-        la        $k0, chunkIH
-        sw        $a0, 0($k0)        # Get some free registers
-        sw        $v0, 4($k0)        # by storing them to a global variable
-        sw        $t0, 8($k0)
-        sw        $t1, 12($k0)
-        sw        $t2, 16($k0)
-        sw        $t3, 20($k0)
-		sw $t4, 24($k0)
-		sw $t5, 28($k0)
+    la        $k0, chunkIH
+    sw        $a0, 0($k0)        # Get some free registers
+    sw        $v0, 4($k0)        # by storing them to a global variable
+    sw        $t0, 8($k0)
+    sw        $t1, 12($k0)
+    sw        $t2, 16($k0)
+    sw        $t3, 20($k0)
+	sw $t4, 24($k0)
+	sw $t5, 28($k0)
 
-        mfc0      $k0, $13             # Get Cause register
-        srl       $a0, $k0, 2
-        and       $a0, $a0, 0xf        # ExcCode field
-        bne       $a0, 0, non_intrpt
+    mfc0      $k0, $13             # Get Cause register
+    srl       $a0, $k0, 2
+    and       $a0, $a0, 0xf        # ExcCode field
+    bne       $a0, 0, non_intrpt
 
 
 
