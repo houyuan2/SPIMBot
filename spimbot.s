@@ -99,6 +99,9 @@ main:
 
     sw $0, puzzle_stage # set puzzle stage to 0
 
+    # set bonk_flag to 0
+    sw  $0, bonk_flag
+
     # set up left or right flag
     lw  $t0, BOT_X
     blt $t0, 140, spawn_left
@@ -238,6 +241,8 @@ array_clean_loop:
     la  $t2, neededIngredient
     add $t2, $t2, $t1
     sw  $0, 0($t2)
+    
+    add $t0, $t0, 1
     j array_clean_loop
 array_clean_finish:
 
