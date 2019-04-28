@@ -153,12 +153,16 @@ fail:
 
 
 determineOrder:
+  sub $sp, $sp, 4
+  sw  $ra, 0($sp)
   la  $a0, order_0
   la  $a1, process_0
   jal compareOrder
   #order_success
   bne $v0, 1, order1
   sw  $0, order_success
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
   jr  $ra
 order1:
   la  $a0, order_1
@@ -167,6 +171,8 @@ order1:
   bne $v0, 1, order2
   li  $t0, 1
   sw  $t0, order_success
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
   jr  $ra
 order2:
   la  $a0, order_2
@@ -175,8 +181,12 @@ order2:
   bne $v0, 2, noOrder
   li  $t0, 2
   sw  $t0, order_success
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
   jr  $ra
 noOrder:
   li  $t0, -1
   sw  $t0, order_success
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
   jr  $ra
