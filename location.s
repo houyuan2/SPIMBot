@@ -3,8 +3,8 @@
 #check appliance, return next location, $a0 food id  $a1 id of first appliance, $a2 id of the second appliance
 location:
 
-  lw  $t0,     #determine if left or right
-  bgt $t0, 7, right  #if x>7, right spimbot
+  lw  $t0,  side   #determine if left or right
+  beq $t0, 1, right  #if side == 1, right spimbot
 
   #left
   bne $a0, 0, cheeseL #bread
@@ -69,7 +69,7 @@ u2:
 right:
   bne $a0, 0, cheeseR #bread
   j   counterR
-cheeseL:
+cheeseR:
   bne $a0, 1, raw_meatR #cheese
   j   counterR
 raw_meatR:
