@@ -130,29 +130,46 @@ spawn_left_app:
   lb  $t2, 35($t1)
   sw  $t2, left_applicance
 app_finish:
+  li      $t5, 10
+  sw      $t5, VELOCITY
+  lw      $t6,BOT_Y
+  blt     $t6,55,app_finish
+  li      $t7,-90
+  sw      $t7,ANGLE($zero)
+  sw      $zero,ANGLE_CONTROL($zero)
+keep_moving:
+  li      $t5, 10
+  sw      $t5, VELOCITY
+  lw      $t6,BOT_X
+  blt     $t6,30,keep_moving
+  li      $t7,0
+  sw      $t7, VELOCITY
+  li      $a0, 150
+  li      $a1, 200
+  jal     findAngle
   # move bot to the start location
-  lw  $t0, side
-  beq $t0, 1, move_start_right
-  # spawn left
-  li  $a0, 10
-  li  $a1, 45
-  li  $t0, 0
-move_start_loop_left:
-  bgt $t0, 250, move_start_end
-  jal findAngle
-  j move_start_loop_left
-move_start_right:
-  li  $a0, 290
-  li  $a1, 45
-  li  $t0, 0
-move_start_loop_right:
-  bgt $t0, 150, move_start_end
-  jal findAngle
-  j move_start_loop_right
-move_start_end:
-  li  $a0, 140
-  li  $a1, 140
-  jal findAngle
+#   lw  $t0, side
+#   beq $t0, 1, move_start_right
+#   # spawn left
+#   li  $a0, 10
+#   li  $a1, 45
+#   li  $t0, 0
+# move_start_loop_left:
+#   bgt $t0, 250, move_start_end
+#   jal findAngle
+#   j move_start_loop_left
+# move_start_right:
+#   li  $a0, 290
+#   li  $a1, 45
+#   li  $t0, 0
+# move_start_loop_right:
+#   bgt $t0, 150, move_start_end
+#   jal findAngle
+#   j move_start_loop_right
+# move_start_end:
+#   li  $a0, 140
+#   li  $a1, 140
+#   jal findAngle
 infinite:
   jal mission_control
 	j infinite
@@ -219,12 +236,12 @@ update:
     lw $a1, 4($s0)
     la $a2, order_0
     jal decode_request
-		
+
     lw $a0, 8($s0)
     lw $a1, 12($s0)
     la $a2, order_1
     jal decode_request
-		
+
     lw $a0, 16($s0)
     lw $a1, 20($s0)
     la $a2, order_2
@@ -238,12 +255,12 @@ update:
     lw $a1, 4($s0)
     la $a2, process_0
     jal decode_request
-		
+
     lw $a0, 8($s0)
     lw $a1, 12($s0)
     la $a2, process_1
     jal decode_request
-		
+
     lw $a0, 16($s0)
     lw $a1, 20($s0)
     la $a2, process_2
@@ -266,7 +283,7 @@ array_clean_loop:
     la  $t2, neededIngredient
     add $t2, $t2, $t1
     sw  $0, 0($t2)
-    
+
     add $t0, $t0, 1
     j array_clean_loop
 array_clean_finish:
