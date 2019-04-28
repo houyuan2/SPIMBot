@@ -240,19 +240,28 @@ counter_movement:
     j mission_control_end
     # counter raw food
 counter_raw_food:
-
-    # food bin
     
+    # food bin
+counter_food_bin:
+    jal foodbin_switch
+    li  $t0, 2
+    sw  $t0, location_switch  # set location flag to 2
     j mission_control_end
 order_movement:
     jal Compare_current_order
+    beq $v0, 0, order_movement_end  # do nothing if compare fails
+    # submit order if success
+    sw  $0, SUBMIT_ORDER
+    li  $t0, -1
+    sw  $t0, order_success  # reset order success
+order_movement_end:
     li  $a0, 140
     li  $a1, 240
     jal findAngle # moveback to counter
     sw  $0, location_switch # go back to counter after order
     j mission_control_end
 food_movement:  
-    jal foodbin_todo
+    jal foodbin_todo  # location flag in the applicance location
     j mission_control_end
 applicance_movement:  # finish
     jal cook
@@ -895,6 +904,121 @@ end:
   lw  $ra, 0($sp)
   add $sp, $sp, 4
   jr  $ra
+
+foodbin_switch:
+    sub $sp, $sp, 4
+    sw  $ra, 0($sp)
+
+    lw  $t0, side
+    lw  $t1, foodbin_stage
+    beq $t0, 1, foodbin_right
+    # left side
+    beq $t1, 0, foodbin_left_0
+    beq $t1, 1, foodbin_left_1
+    beq $t1, 2, foodbin_left_2
+foodbin_left_0:
+    li  $a0, 10
+    li  $a1, 70
+    jal findAngle
+    j   foodbin_switch_end
+foodbin_left_1:
+    li  $a0, 10
+    li  $a1, 150
+    jal findAngle
+    j   foodbin_switch_end
+foodbin_left_2:
+    li  $a0, 10
+    li  $a1, 230
+    jal findAngle
+    j   foodbin_switch_end
+foodbin_right:
+    # right side
+    beq $t1, 0, foodbin_right_0
+    beq $t1, 1, foodbin_right_1
+    beq $t1, 2, foodbin_right_2
+foodbin_right_0:
+    li  $a0, 290
+    li  $a1, 70
+    jal findAngle
+    j   foodbin_switch_end
+foodbin_right_1:
+    li  $a0, 290
+    li  $a1, 150
+    jal findAngle
+    j   foodbin_switch_end
+foodbin_right_2:
+    li  $a0, 290
+    li  $a1, 230
+    jal findAngle
+    j   foodbin_switch_end
+foodbin_switch_end:
+    lw  $ra, 0($sp)
+    add $sp, $sp, 4
+    jr $ra
+
+foodbin_todo:
+    sub $sp, $sp, 4
+	  sw  $ra, 0($sp)
+    sw  $0,  PICKUP
+    sw  $0,  PICKUP
+    sw  $0,  PICKUP
+    sw  $0,  PICKUP
+
+    la  $t0, inventory
+    sw  $t0, GET_INVENTORY
+
+    lw  $t0, 0($t0) # first food
+    and $t1, $t0, 0xffff0000
+    srl $t1, $t1, 16 # food id
+    and $t2, $t0, 0x00000001 # process level
+
+    lw  $a1, left_applicance
+    lw  $a2, right_applicance
+
+    beq $t1, 0, foodbin_bread
+    beq $t1, 1, foodbin_cheese
+    beq $t1, 2, foodbin_meat
+    beq $t1, 3, foodbin_tomato
+    beq $t1, 4, foodbin_onion
+    beq $t1, 5, foodbin_lettuce
+    j   foodbin_end
+foodbin_bread:
+    lw  $a0, 0
+    jal applicance_location
+    j foodbin_end
+foodbin_cheese:
+    lw  $a0, 1
+    jal applicance_location
+    j foodbin_end
+foodbin_meat:
+    lw  $a0, 2
+    jal applicance_location
+    j foodbin_end
+foodbin_tomato:
+    lw  $a0, 5
+    jal applicance_location
+    j foodbin_end
+foodbin_onion:
+    lw  $a0, 7
+    jal applicance_location
+    j foodbin_end
+foodbin_lettuce:
+    beq $t2, 1, foodbin_lettuce_uncut
+    lw  $a0, 9
+    jal applicance_location
+    j foodbin_end  
+foodbin_lettuce_uncut:  
+    lw  $a0, 10
+    jal applicance_location
+    j foodbin_end 
+foodbin_end:
+    move $a0, $v0
+    move $a1, $v1
+    jal findAngle
+
+    lw  $ra, 0($sp)
+    add $sp, $sp, 4
+    jr  $ra
 
 # puzzle_solver
 floodfill:
