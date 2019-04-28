@@ -816,6 +816,7 @@ bonk_interrupt:
     #Fill in your code here
     li      $t1, 1
     sw      $t1, bonk_flag
+    sw      $0, VELOCITY    # set velocity to 0
     j       interrupt_dispatch    # see if other interrupts are waiting
 
 request_puzzle_interrupt:
