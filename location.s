@@ -54,19 +54,19 @@ u2chop:
   bne $a2, 6, counter
   j   u2
 counter:
-  li  $v0, 6  #x=7
-  li  $v1, 7  #y=6
+  li  $v0, 120  #x=7
+  li  $v1, 140  #y=6
   sw  $0, location_switch
   jr  $ra
 u1:
-  li  $v0, 2
-  li  $v1, 3
+  li  $v0, 40
+  li  $v1, 60
   li  $t0, 3
   sw  $t0, location_switch
   jr  $ra
 u2:
-  li  $v0, 5
-  li  $v1, 3
+  li  $v0, 100
+  li  $v1, 60
   li  $t0, 3
   sw  $t0, location_switch
   jr  $ra
@@ -119,19 +119,19 @@ u4chop:
   bne $a2, 6, counterR
   j   u4
 counterR:
-  li  $v0, 8  #x=7
-  li  $v1, 7  #y=8
+  li  $v0, 160  #x=7
+  li  $v1, 140  #y=8
   sw  $0, location_switch
   jr  $ra
 u3:
-  li  $v0, 9
-  li  $v1, 3
+  li  $v0, 180
+  li  $v1, 60
   li  $t0, 3
   sw  $t0, location_switch
   jr  $ra
 u4:
-  li  $v0, 12
-  li  $v1, 3
+  li  $v0, 240
+  li  $v1, 60
   li  $t0, 3
   sw  $t0, location_switch
   jr  $ra
