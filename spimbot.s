@@ -49,11 +49,17 @@ FINISH_APPLIANCE_INSTANT = 0xffff0078
 PRINT_INT_ADDR = 0xffff0080
 
 puzzle:      .word 0:452
+
+# flags:
 # 0: puzzle is requested but not arrive
 # 1: puzzle is there and has not start solving
 # 2: puzzle is solving but not finish
 # 3: puzzle is finished
 puzzle_stage: .word 4
+
+side: .word 4   # 0: left, 1: right
+
+bonk_flag:  .word 4 #0: nothing, 1: just bonked
 
 #arctan constants
 three: 	.float  3.0
@@ -61,7 +67,6 @@ five:  .float  5.0
 PI:    .float  3.141592
 F180:  .float 180.0
 
-side: .word 4   # 0: left, 1: right
 layout: .word 225
 left_applicance: .word 1
 right_applicance: .word 1
@@ -73,6 +78,7 @@ order_2: .word 48
 process_0: .word 48
 process_1: .word 48
 process_2: .word 48
+counter_fetch: .word 8
 counter: .word 48
 neededIngredient: .word 48
 
@@ -118,25 +124,7 @@ spawn_left_app:
     lb  $t2, 35($t1)
     sb  $t2, left_applicance
 app_finish:
-
-    # la $s0, order_fetch
-    # sw $s0, GET_TURNIN_ORDER
-
-    # lw $a0, 0($s0)
-    # lw $a1, 4($s0)
-    # la $a2, order_0
-    # jal decode_request
-		
-    # lw $a0, 8($s0)
-    # lw $a1, 12($s0)
-    # la $a2, order_1
-    # jal decode_request
-		
-    # lw $a0, 16($s0)
-    # lw $a1, 20($s0)
-    # la $a2, order_2
-    # jal decode_request
-
+    add $0, $0, $0  # place holder
 infinite:
     jal mission_control
 	j infinite
@@ -172,11 +160,15 @@ puzzle_3:   # submit puzzle and request new one
     sw $0, puzzle_stage # set puzzle stage to 0
 
 movement:
-
+    lw  $t0, bonk_flag
+    beq $t0, 0, mission_control_end # do nothing if not bonked
+    sw  $0, bonk_flag   # set bonk flag back to 0
+    jal update
 	# li $a0, 60
 	# li $a1, 90
 	# jal findAngle
 
+mission_control_end:
     lw  $ra, 0($sp)
     lw	$s0, 4($sp)
     lw  $s1, 8($sp)
@@ -184,6 +176,76 @@ movement:
     lw  $s3, 16($sp)
     add $sp, $sp, 20
     jr $ra
+
+update:
+    sub   $sp, $sp, 12
+	sw    $ra, 0($sp)
+	sw    $s0, 4($sp)
+	sw    $s1, 8($sp)
+
+    # update order infor
+    la $s0, order_fetch
+    sw $s0, GET_TURNIN_ORDER
+
+    lw $a0, 0($s0)
+    lw $a1, 4($s0)
+    la $a2, order_0
+    jal decode_request
+		
+    lw $a0, 8($s0)
+    lw $a1, 12($s0)
+    la $a2, order_1
+    jal decode_request
+		
+    lw $a0, 16($s0)
+    lw $a1, 20($s0)
+    la $a2, order_2
+    jal decode_request
+
+    # update process infor
+    la $s0, order_fetch
+    sw $s0, GET_TURNIN_USERS
+
+    lw $a0, 0($s0)
+    lw $a1, 4($s0)
+    la $a2, process_0
+    jal decode_request
+		
+    lw $a0, 8($s0)
+    lw $a1, 12($s0)
+    la $a2, process_1
+    jal decode_request
+		
+    lw $a0, 16($s0)
+    lw $a1, 20($s0)
+    la $a2, process_2
+    jal decode_request
+
+    # update counter
+    la $s0, counter_fetch
+    sw $s0, GET_SHARED
+
+    lw $a0, 0($s0)
+    lw $a1, 4($s0)
+    la $a2, counter
+    jal decode_request
+
+    # clear neededIngredient
+    li  $t0, 0
+array_clean_loop:
+    bge $t0, 12, array_clean_finish
+    mul $t1, $t0, 4
+    la  $t2, neededIngredient
+    add $t2, $t2, $t1
+    sw  $0, 0($t2)
+    j array_clean_loop
+array_clean_finish:
+
+    lw    $ra, 0($sp)
+	lw    $s0, 4($sp)
+	lw    $s1, 8($sp)
+	add   $sp, $sp, 12
+	jr		$ra
 
 findAngle:
 	sub   $sp, $sp, 12
@@ -620,6 +682,8 @@ interrupt_dispatch:            # Interrupt:
 bonk_interrupt:
 	sw 		$0, BONK_ACK
     #Fill in your code here
+    li      $t1, 1
+    sw      $t1, bonk_flag
     j       interrupt_dispatch    # see if other interrupts are waiting
 
 request_puzzle_interrupt:
