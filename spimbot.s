@@ -342,12 +342,12 @@ update:
 
     # clear neededIngredient
     li  $t0, 0
+    la  $t2, neededIngredient
 array_clean_loop:
     bge $t0, 12, array_clean_finish
     mul $t1, $t0, 4
-    la  $t2, neededIngredient
-    add $t2, $t2, $t1
-    sw  $0, 0($t2)
+    add $t1, $t2, $t1
+    sw  $0, 0($t1)
 
     add $t0, $t0, 1
     j array_clean_loop
