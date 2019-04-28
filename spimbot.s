@@ -61,6 +61,8 @@ side: .word 4   # 0: left, 1: right
 
 bonk_flag:  .word 4 #0: nothing, 1: just bonked
 
+location_switch: .word 4  #0: counter, #1: order, #2: food, #3 applicance
+
 #arctan constants
 three: 	.float  3.0
 five:  .float  5.0
@@ -68,8 +70,8 @@ PI:    .float  3.141592
 F180:  .float 180.0
 
 layout: .word 225
-left_applicance: .word 1
-right_applicance: .word 1
+left_applicance: .word 4
+right_applicance: .word 4
 
 order_fetch: .word 24
 order_0: .word 48
@@ -87,58 +89,81 @@ inventory: .word 16
 .text
 main:
 	# Construct interrupt mask
-	li      $t4, 0
+  li      $t4, 0
 	or      $t4, $t4, BONK_INT_MASK # request bonk
 	or      $t4, $t4, REQUEST_PUZZLE_INT_MASK	        # puzzle interrupt bit
 	or      $t4, $t4, 1 # global enable
 	mtc0    $t4, $12
 
 	#Fill in your code here
-    la $t1, puzzle
-    sw $t1, REQUEST_PUZZLE
+  la $t1, puzzle
+  sw $t1, REQUEST_PUZZLE
 
-    sw $0, puzzle_stage # set puzzle stage to 0
+  sw $0, puzzle_stage # set puzzle stage to 0
 
-    # set bonk_flag to 0
-    sw  $0, bonk_flag
+  # set bonk_flag to 0
+  sw  $0, bonk_flag
 
-    # set up left or right flag
-    lw  $t0, BOT_X
-    blt $t0, 140, spawn_left
-    li, $t0, 1
-    sw  $t0, side   # set side flag to 1
-    j   side_finish
+  # set up left or right flag
+  lw  $t0, BOT_X
+  blt $t0, 140, spawn_left
+  li, $t0, 1
+  sw  $t0, side   # set side flag to 1
+  j   side_finish
 spawn_left:
-    sw  $0, side   # set side flag to 0
+  sw  $0, side   # set side flag to 0
 side_finish:
-    # set up appliance tag, offset: 32, 35, 39, 42
-    la  $t1, layout
-    sw  $t1, GET_LAYOUT
-    beq $t0, 0, spawn_left_app
-    # set up spawn right app
-    lb  $t2, 39($t1)
-    sb  $t2, right_applicance
-    lb  $t2, 42($t1)
-    sb  $t2, left_applicance
-    j app_finish
+  # set up appliance tag, offset: 32, 35, 39, 42
+  la  $t1, layout
+  sw  $t1, GET_LAYOUT
+  beq $t0, 0, spawn_left_app
+  # set up spawn right app
+  lb  $t2, 39($t1)
+  sw  $t2, right_applicance
+  lb  $t2, 42($t1)
+  sw  $t2, left_applicance
+  j app_finish
 spawn_left_app:
-    lb  $t2, 32($t1)
-    sb  $t2, right_applicance
-    lb  $t2, 35($t1)
-    sb  $t2, left_applicance
+  # set up spawn left app
+  lb  $t2, 32($t1)
+  sw  $t2, right_applicance
+  lb  $t2, 35($t1)
+  sw  $t2, left_applicance
 app_finish:
-    add $0, $0, $0  # place holder
+  # move bot to the start location
+  lw  $t0, side
+  beq $t0, 1, move_start_right
+  # spawn left
+  li  $a0, 10
+  li  $a1, 45
+  li  $t0, 0
+move_start_loop_left:
+  bgt $t0, 250, move_start_end
+  jal findAngle
+  j move_start_loop_left
+move_start_right:
+  li  $a0, 290
+  li  $a1, 45
+  li  $t0, 0
+move_start_loop_right:
+  bgt $t0, 150, move_start_end
+  jal findAngle
+  j move_start_loop_right
+move_start_end:
+  li  $a0, 140
+  li  $a1, 140
+  jal findAngle
 infinite:
-    jal mission_control
+  jal mission_control
 	j infinite
 
 mission_control:
-    sub $sp, $sp, 20
-    sw  $ra, 0($sp)
-    sw  $s0, 4($sp)
-    sw  $s1, 8($sp)
-    sw  $s2, 12($sp)
-    sw  $s3, 16($sp)
+  sub $sp, $sp, 20
+  sw  $ra, 0($sp)
+  sw  $s0, 4($sp)
+  sw  $s1, 8($sp)
+  sw  $s2, 12($sp)
+  sw  $s3, 16($sp)
 
     lw $s0, puzzle_stage # get puzzle stage
     beq $s0, 0, movement
@@ -182,9 +207,9 @@ mission_control_end:
 
 update:
     sub   $sp, $sp, 12
-	sw    $ra, 0($sp)
-	sw    $s0, 4($sp)
-	sw    $s1, 8($sp)
+	  sw    $ra, 0($sp)
+	  sw    $s0, 4($sp)
+	  sw    $s1, 8($sp)
 
     # update order infor
     la $s0, order_fetch
@@ -246,7 +271,7 @@ array_clean_loop:
     j array_clean_loop
 array_clean_finish:
 
-    lw    $ra, 0($sp)
+  lw    $ra, 0($sp)
 	lw    $s0, 4($sp)
 	lw    $s1, 8($sp)
 	add   $sp, $sp, 12
@@ -441,7 +466,6 @@ f_end_if1:
     move    $v0, $a1
     jr      $ra
 f_end_if2:
-
 
 #       char board[][] = puzzle->board;
 #       if (board[row][col] != ’#’) {
