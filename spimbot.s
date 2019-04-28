@@ -234,6 +234,7 @@ counter_movement:
     # order
     jal determineOrder
     lw  $t0, order_success
+		sw  $t0, PRINT_INT_ADDR
     beq $t0, -1, counter_raw_food
     li  $t0, 1
     sw  $t0, location_switch  # set location flag to 1
@@ -266,7 +267,7 @@ order_movement_end:
     jal findAngle # moveback to counter
     sw  $0, location_switch # go back to counter after order
     j mission_control_end
-food_movement:  
+food_movement:
     jal foodbin_todo  # location flag in the applicance location
     j mission_control_end
 applicance_movement:  # finish
@@ -526,9 +527,9 @@ Compare_current_order:
 	la		$t0, order_success
 	lw    $t0, 0($t0)
 	beq   $t0, -1, compare_end
-	beq   $t0, 0, copare_order_0
-	beq   $t0, 1, copare_order_1
-	beq   $t0, 2, copare_order_2
+	beq   $t0, 0, compare_order_0
+	beq   $t0, 1, compare_order_1
+	beq   $t0, 2, compare_order_2
 compare_order_0:
 	la 		$t0, order_fetch
 	sw 		$t0, GET_TURNIN_ORDER
@@ -650,11 +651,11 @@ foodbin_lettuce:
     beq $t2, 1, foodbin_lettuce_uncut
     lw  $a0, 9
     jal applicance_location
-    j foodbin_end  
-foodbin_lettuce_uncut:  
+    j foodbin_end
+foodbin_lettuce_uncut:
     lw  $a0, 10
     jal applicance_location
-    j foodbin_end 
+    j foodbin_end
 foodbin_end:
     move $a0, $v0
     move $a1, $v1
@@ -663,35 +664,36 @@ foodbin_end:
     lw  $ra, 0($sp)
     add $sp, $sp, 4
     jr  $ra
-  
+
   #pass $a0 as order $a1 as process
 compareOrder:
-  sub $sp, $sp, 16
+  sub $sp, $sp, 20
   sw  $s0, 0($sp)  #order
   sw  $s1, 4($sp)  #process
   sw  $s2, 8($sp)  #shared counter
   sw  $s3, 12($sp)
+	sw  $ra, 16($sp)
   #array from global
 
   #order_0
-  move  $s0, $a0
-  move  $s1, $a1
+  move  $s0, $a0  #order
+  move  $s1, $a1  #process
   la  $s2, counter
   la  $s3, neededIngredient
   li  $t0, 0
 order0:
-  bge $t0, 12, compare_0
+  bge $t0, 12, compare_0  #0<12
   mul $t1, $t0, 4 #i*4
   add $t2, $s0, $t1 #order
   add $t3, $s1, $t1 #process
   add $t4, $s3, $t1 #ingredient
-  lw  $t2, 0($t2)
-  lw  $t3, 0($t3)
-  sub $t5, $t2, $t3 #order - process
+  lw  $t2, 0($t2)   #order[i]
+  lw  $t3, 0($t3)   #process[i]
+  sub $t5, $t2, $t3 #order[i] - process[i]
   sw  $t5, 0($t4)  #neededingredient[i]
   add $t0, $t0, 1
   j   order0
-  
+
 compare_0:
 #bread 0
   lw  $t2, 0($s2) #counter
@@ -699,23 +701,23 @@ compare_0:
   bgt $t3, $t2, fail #needed > counter, fail
 #cheese 1
   lw  $t2, 4($s2)
-  lw  $t3, 4($t3)
+  lw  $t3, 4($s3)
   bgt $t3, $t2, fail
 #meat 3
   lw  $t2, 12($s2)
-  lw  $t3, 12($t3)
+  lw  $t3, 12($s3)
   bgt $t3, $t2, fail
 #tomato
   lw  $t2, 24($s2)
-  lw  $t3, 24($t3)
+  lw  $t3, 24($s3)
   bgt $t3, $t2, fail
 #onion
   lw  $t2, 32($s2)
-  lw  $t3, 32($t3)
+  lw  $t3, 32($s3)
   bgt $t3, $t2, fail
 #lettuce
   lw  $t2, 44($s2)
-  lw  $t3, 44($t3)
+  lw  $t3, 44($s3)
   bgt $t3, $t2, fail
 
   #order0 can be finished
@@ -806,16 +808,17 @@ success:
   lw  $s1, 4($sp)  #process
   lw  $s2, 8($sp)  #shared counter
   lw  $s3, 12($sp)
-  add $sp, $sp, 16
+	lw  $ra, 16($sp)
+  add $sp, $sp, 20
   jr  $ra
 fail:
-  #flag = 0
   li  $v0, 0
   lw  $s0, 0($sp)  #order
   lw  $s1, 4($sp)  #process
   lw  $s2, 8($sp)  #shared counter
   lw  $s3, 12($sp)
-  add $sp, $sp, 16
+	lw  $ra, 16($sp)
+  add $sp, $sp, 20
   jr  $ra
 
 determineOrder:
@@ -844,7 +847,7 @@ order2:
   la  $a0, order_2
   la  $a1, process_2
   jal compareOrder
-  bne $v0, 2, noOrder
+  bne $v0, 1, noOrder
   li  $t0, 2
   sw  $t0, order_success
   lw  $ra, 0($sp)
