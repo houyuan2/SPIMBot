@@ -281,7 +281,15 @@ order_movement_end:
     sw  $0, location_switch # go back to counter after order
     j mission_control_end
 food_movement:
-    jal foodbin_todo  # location flag in the appliance location
+    li $t0, 270
+    li $t1, 1
+    sw $t0, ANGLE
+    sw $t1, ANGLE_CONTROL
+    jal cook
+    li  $a0, 140
+    li  $a1, 140
+    jal findAngle # moveback to counter
+    sw  $0, location_switch # go back to counter after appliance
     j mission_control_end
 appliance_movement:  # finish
     jal appliance_todo
@@ -676,86 +684,6 @@ foodbin_lettuce_uncut:
     jal appliance_location
     j foodbin_end
 foodbin_end:
-    move $a0, $v0
-    move $a1, $v1
-    jal findAngle
-
-    lw  $ra, 0($sp)
-    add $sp, $sp, 4
-    jr  $ra
-
-appliance_todo:
-    sub $sp, $sp, 4
-	sw  $ra, 0($sp)
-
-    li $t0, 270
-    li $t1, 1
-    sw $t0, ANGLE
-    sw $t1, ANGLE_CONTROL
-    jal cook
-
-    la  $t0, inventory
-    sw  $t0, GET_INVENTORY
-
-    lw  $t0, 0($t0) # first food
-    and $t1, $t0, 0xffff0000
-    srl $t1, $t1, 16 # food id
-    and $t2, $t0, 0x00000001 # process level
-
-    lw  $a1, left_appliance
-    lw  $a2, right_appliance
-
-    beq $t1, 0, appliance_bread
-    beq $t1, 1, appliance_cheese
-    beq $t1, 2, appliance_meat
-    beq $t1, 3, appliance_tomato
-    beq $t1, 4, appliance_onion
-    beq $t1, 5, appliance_lettuce
-    j   appliance_end
-appliance_bread:
-    li  $a0, 0
-    jal appliance_location
-    j appliance_end
-appliance_cheese:
-    li  $a0, 1
-    jal appliance_location
-    j appliance_end
-appliance_meat:
-    li  $a0, 2
-    beq $t2, 0, appliance_raw_meat
-    li  $a0, 3
-appliance_raw_meat:
-    jal appliance_location
-    j appliance_end
-appliance_tomato:
-    li  $a0, 5
-    beq $t2, 0, appliance_tomato_uncut
-    li  $a0, 6
-appliance_tomato_uncut:
-    jal appliance_location
-    j appliance_end
-appliance_onion:
-    li  $a0, 7
-    beq $t2, 0, appliance_onion_uncut
-    li  $a0, 8
-appliance_onion_uncut:
-    jal appliance_location
-    j appliance_end
-appliance_lettuce:
-    li  $a0, 9
-    beq $t2, 1, appliance_lettuce_uncut
-    beq $t2, 2, appliance_lettuce_finished
-    jal appliance_location
-    j appliance_end  
-appliance_lettuce_uncut:  
-    li  $a0, 10
-    jal appliance_location
-    j appliance_end 
-appliance_lettuce_finished:
-    li  $a0, 11
-    jal appliance_location
-    j appliance_end 
-appliance_end:
     move $a0, $v0
     move $a1, $v1
     jal findAngle
