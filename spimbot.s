@@ -134,6 +134,7 @@ side_finish:
   # set up appliance tag, offset: 32, 35, 39, 42
   la  $t1, layout
   sw  $t1, GET_LAYOUT
+  lw  $t0, side
   beq $t0, 0, spawn_left_app
   # set up spawn right app
   lb  $t2, 39($t1)
