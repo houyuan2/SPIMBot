@@ -49,23 +49,24 @@ FINISH_APPLIANCE_INSTANT = 0xffff0078
 PRINT_INT_ADDR = 0xffff0080
 
 puzzle:      .word 0:452
-
+.align 4
 # flags:
 # 0: puzzle is requested but not arrive
 # 1: puzzle is there and has not start solving
 # 2: puzzle is solving but not finish
 # 3: puzzle is finished
-puzzle_stage: .word 4
+puzzle_stage: .space 4
 
-side: .word 4   # 0: left, 1: right
+side: .space 4   # 0: left, 1: right
 
-bonk_flag:  .word 4 #0: nothing, 1: just bonked
+bonk_flag:  .space 4 #0: nothing, 1: just bonked
 
-location_switch: .word 4  #0: counter, #1: order, #2: food, #3 applicance
+location_switch: .space 4  #0: counter, #1: order, #2: food, #3 applicance
 
-order_success: .word 4  # -1: nothing success
+order_success: .space 4  # -1: nothing success
 
-foodbin_stage: .word 4  # 0: top
+foodbin_stage: .space 4  # 0: top
+.align 4
 
 #arctan constants
 three: 	.float  3.0
@@ -73,22 +74,25 @@ five:  .float  5.0
 PI:    .float  3.141592
 F180:  .float 180.0
 
-layout: .word 225
-left_applicance: .word 4
-right_applicance: .word 4
+.align 4
+left_appliance: .space 4
+right_appliance: .space 4
 
-order_fetch: .word 24
-order_0: .word 48
-order_1: .word 48
-order_2: .word 48
-process_0: .word 48
-process_1: .word 48
-process_2: .word 48
-counter_fetch: .word 8
-shared_counter: .word 48
-neededIngredient: .word 48
+order_fetch: .space 24
+order_0: .space 48
+order_1: .space 48
+order_2: .space 48
+process_0: .space 48
+process_1: .space 48
+process_2: .space 48
+counter_fetch: .space 8
+shared_counter: .space 48
+neededIngredient: .space 48
 
-inventory: .word 16
+inventory: .space 16
+.align 4
+layout: .space 225
+.align 4
 
 .text
 main:
@@ -133,16 +137,16 @@ side_finish:
   beq $t0, 0, spawn_left_app
   # set up spawn right app
   lb  $t2, 39($t1)
-  sw  $t2, right_applicance
+  sw  $t2, right_appliance
   lb  $t2, 42($t1)
-  sw  $t2, left_applicance
+  sw  $t2, left_appliance
   j app_finish
 spawn_left_app:
   # set up spawn left app
   lb  $t2, 32($t1)
-  sw  $t2, right_applicance
+  sw  $t2, right_appliance
   lb  $t2, 35($t1)
-  sw  $t2, left_applicance
+  sw  $t2, left_appliance
 app_finish:
   lw      $t5, side
   beq     $t5, 1, right_side_moving
@@ -232,9 +236,10 @@ movement:
     beq $t0, 3, applicance_movement
 counter_movement:
     # order
+    # j counter_raw_food
     jal determineOrder
     lw  $t0, order_success
-		sw  $t0, PRINT_INT_ADDR
+		# sw  $t0, PRINT_INT_ADDR
     beq $t0, -1, counter_raw_food
     li  $t0, 1
     sw  $t0, location_switch  # set location flag to 1
@@ -361,7 +366,7 @@ array_clean_finish:
 
 #
 #check appliance, return next location, $a0 food id  $a1 id of first appliance, $a2 id of the second appliance
-applicance_location:
+appliance_location:
 
   lw  $t0,  side   #determine if left or right
   beq $t0, 1, right  #if side == 1, right spimbot
@@ -414,16 +419,21 @@ u2chop:
   bne $a2, 6, counter
   j   u2
 counter:
-  li  $v0, 6  #x=7
-  li  $v1, 7  #y=6
+  li  $v0, 120  #x=7
+  li  $v1, 140  #y=6
+  sw  $0, location_switch
   jr  $ra
 u1:
-  li  $v0, 2
-  li  $v1, 3
+  li  $v0, 40
+  li  $v1, 60
+  li  $t0, 3
+  sw  $t0, location_switch
   jr  $ra
 u2:
-  li  $v0, 5
-  li  $v1, 3
+  li  $v0, 100
+  li  $v1, 60
+  li  $t0, 3
+  sw  $t0, location_switch
   jr  $ra
 # right spimbot
 right:
@@ -474,16 +484,21 @@ u4chop:
   bne $a2, 6, counterR
   j   u4
 counterR:
-  li  $v0, 8  #x=7
-  li  $v1, 7  #y=8
+  li  $v0, 160  #x=7
+  li  $v1, 140  #y=8
+  sw  $0, location_switch
   jr  $ra
 u3:
-  li  $v0, 9
-  li  $v1, 3
+  li  $v0, 180
+  li  $v1, 60
+  li  $t0, 3
+  sw  $t0, location_switch
   jr  $ra
 u4:
-  li  $v0, 12
-  li  $v1, 3
+  li  $v0, 240
+  li  $v1, 60
+  li  $t0, 3
+  sw  $t0, location_switch
   jr  $ra
 
 findAngle:
@@ -617,8 +632,8 @@ foodbin_todo:
   srl $t1, $t1, 16 # food id
   and $t2, $t0, 0x00000001 # process level
 
-  lw  $a1, left_applicance
-  lw  $a2, right_applicance
+  lw  $a1, left_appliance
+  lw  $a2, right_appliance
 
   beq $t1, 0, foodbin_bread
   beq $t1, 1, foodbin_cheese
@@ -628,33 +643,33 @@ foodbin_todo:
   beq $t1, 5, foodbin_lettuce
   j   foodbin_end
 foodbin_bread:
-    lw  $a0, 0
-    jal applicance_location
+    li  $a0, 0
+    jal appliance_location
     j foodbin_end
 foodbin_cheese:
-    lw  $a0, 1
-    jal applicance_location
+    li  $a0, 1
+    jal appliance_location
     j foodbin_end
 foodbin_meat:
-    lw  $a0, 2
-    jal applicance_location
+    li  $a0, 2
+    jal appliance_location
     j foodbin_end
 foodbin_tomato:
-    lw  $a0, 5
-    jal applicance_location
+    li  $a0, 5
+    jal appliance_location
     j foodbin_end
 foodbin_onion:
-    lw  $a0, 7
-    jal applicance_location
+    li  $a0, 7
+    jal appliance_location
     j foodbin_end
 foodbin_lettuce:
     beq $t2, 1, foodbin_lettuce_uncut
-    lw  $a0, 9
-    jal applicance_location
+    li  $a0, 9
+    jal appliance_location
     j foodbin_end
 foodbin_lettuce_uncut:
-    lw  $a0, 10
-    jal applicance_location
+    li  $a0, 10
+    jal appliance_location
     j foodbin_end
 foodbin_end:
     move $a0, $v0
@@ -868,7 +883,7 @@ rawFood:
   blt $t0, 4, unwahsedT
   li  $a0, 2
   lw  $a1, left_appliance
-  lw  $a2, right_appliance
+  lw  $a2, left_appliance
   jal appliance_location
   lw  $t3, location_switch
   bne $t3, 3, unwahsedT
@@ -1060,6 +1075,44 @@ No_order:
   lw    $ra, 0($sp)
   add   $sp, $sp, 4
   jr    $ra
+  
+cook:
+  li      $t0, 0
+drop_loop:
+  bge     $t0, 4, appliance_done
+  sw      $t0, DROPOFF
+  lw      $t3, BOT_X
+  ble     $t3, 75, first_appliance
+  ble     $t3, 135, second_appliance
+  ble     $t3, 215, third_appliance
+  ble     $t3, 275, forth_appliance
+first_appliance:
+  li 			$t4, 0x00020002
+  sw 			$t4, SET_TILE
+  j       get_level
+second_appliance:
+  li 			$t4, 0x00020005
+  sw 			$t4, SET_TILE
+  j       get_level
+third_appliance:
+  li 			$t4, 0x00020009
+  sw 			$t4, SET_TILE
+  j       get_level
+forth_appliance:
+  li 			$t4, 0x0002000c
+  sw 			$t4, SET_TILE
+get_level:
+  lw      $t1, GET_TILE_INFO
+  add     $t2, $t1, 1
+appliance_loop:
+  lw      $t1, GET_TILE_INFO
+  bne     $t1, $t2, appliance_loop
+  sw      $zero, PICKUP
+  add     $t0, $t0, 1
+  j       my_loop
+appliance_done:
+  jr      $ra
+
 
 # puzzle_solver
 floodfill:
