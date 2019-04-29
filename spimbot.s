@@ -90,9 +90,8 @@ shared_counter: .space 48
 neededIngredient: .space 48
 
 inventory: .space 16
-.align 4
+.align 1
 layout: .space 225
-.align 4
 
 .text
 main:
@@ -154,11 +153,11 @@ app_finish:
 left_side_moving:
   li      $t5, 10
   sw      $t5, VELOCITY
-  lw      $t6,BOT_Y
-  blt     $t6,55,left_side_moving
-  li      $t7,-90
-  sw      $t7,ANGLE($zero)
-  sw      $zero,ANGLE_CONTROL($zero)
+  lw      $t6, BOT_Y
+  blt     $t6, 55, left_side_moving
+  li      $t7, -90
+  sw      $t7, ANGLE($zero)
+  sw      $zero, ANGLE_CONTROL($zero)
 keep_moving_left:
   li      $t5, 10
   sw      $t5, VELOCITY
@@ -244,8 +243,9 @@ counter_movement:
     sw  $t0, DROPOFF
     sw  $t1, DROPOFF
     sw  $t2, DROPOFF
+
+    jal update_counter
     # order
-    # j counter_raw_food
     jal determineOrder
     lw  $t0, order_success
 		sw  $t0, PRINT_INT_ADDR
@@ -349,15 +349,6 @@ update:
     la $a2, process_2
     jal decode_request
 
-    # update counter
-    la $s0, counter_fetch
-    sw $s0, GET_SHARED
-
-    lw $a0, 0($s0)
-    lw $a1, 4($s0)
-    la $a2, shared_counter
-    jal decode_request
-
     # clear neededIngredient
     li  $t0, 0
     la  $t2, neededIngredient
@@ -376,6 +367,21 @@ array_clean_finish:
 	lw    $s1, 8($sp)
 	add   $sp, $sp, 12
 	jr		$ra
+
+update_counter:
+    sub $sp, $sp, 4
+    sw  $ra, 0($sp)
+    # update counter
+    la $t0, counter_fetch
+    sw $t0, GET_SHARED
+
+    lw $a0, 0($t0)
+    lw $a1, 4($t0)
+    la $a2, shared_counter
+    jal decode_request
+
+    lw  $ra, 0($sp)
+    add $sp, $sp, 4
 
 #
 #check appliance, return next location, $a0 food id  $a1 id of first appliance, $a2 id of the second appliance
