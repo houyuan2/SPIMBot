@@ -236,6 +236,13 @@ movement:
     beq $t0, 2, food_movement
     beq $t0, 3, applicance_movement
 counter_movement:
+    li  $t0, 1
+    li  $t1, 2
+    li  $t2, 3
+    sw  $0, DROPOFF
+    sw  $t0, DROPOFF
+    sw  $t1, DROPOFF
+    sw  $t2, DROPOFF
     # order
     # j counter_raw_food
     jal determineOrder
