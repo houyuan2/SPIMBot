@@ -408,11 +408,11 @@ onionL:
   j   counter
 unwahsedUnchoppedLettuceL:
   bne $a0, 9, unwahsedLettuceL
-  bne $a1, 6, u2sink
+  bne $a1, 5, u2sink
   j   u1
 unwahsedLettuceL:
   bne $a0, 10, lettuceL
-  bne $a1, 5, u2chop
+  bne $a1, 6, u2chop
   j   u1
 lettuceL:
   bne $a0, 11, counter
@@ -473,11 +473,11 @@ onionR:
   j   counterR
 unwahsedUnchoppedLettuceR:
   bne $a0, 9, unwahsedLettuceR
-  bne $a1, 6, u4sink
+  bne $a1, 5, u4sink
   j   u3
 unwahsedLettuceR:
   bne $a0, 10, lettuceR
-  bne $a1, 5, u4chop
+  bne $a1, 6, u4chop
   j   u3
 lettuceR:
   bne $a0, 11, counterR
