@@ -281,6 +281,9 @@ order_movement_end:
     sw  $0, location_switch # go back to counter after order
     j mission_control_end
 food_movement:
+    jal foodbin_todo  # location flag in the appliance location
+    j mission_control_end
+appliance_movement:  # finish
     li $t0, 270
     li $t1, 1
     sw $t0, ANGLE
@@ -290,9 +293,6 @@ food_movement:
     li  $a1, 140
     jal findAngle # moveback to counter
     sw  $0, location_switch # go back to counter after appliance
-    j mission_control_end
-appliance_movement:  # finish
-    jal appliance_todo
     j mission_control_end
 
 mission_control_end:
