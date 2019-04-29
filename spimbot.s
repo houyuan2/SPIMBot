@@ -399,10 +399,10 @@ onionL:
   bne $a0, 8, unwahsedUnchoppedLettuceL
   j   counter
 unwahsedUnchoppedLettuceL:
-  bne $a0, 9, unwahsedLettuce
+  bne $a0, 9, unwahsedLettuceL
   bne $a1, 6, u2sink
   j   u1
-unwahsedLettucelettuce:
+unwahsedLettuceL:
   bne $a0, 10, lettuceL
   bne $a1, 5, u2chop
   j   u1
@@ -467,7 +467,7 @@ unwahsedUnchoppedLettuceR:
   bne $a0, 9, unwahsedLettuceR
   bne $a1, 6, u4sink
   j   u3
-unwahsedLettucelettuceR:
+unwahsedLettuceR:
   bne $a0, 10, lettuceR
   bne $a1, 5, u4chop
   j   u3
@@ -878,7 +878,7 @@ noOrder:
 rawFood:
   sub $sp, $sp, 4
   sw  $ra, 0($sp)
-  la  $t1, counter
+  la  $t1, shared_counter
   lw  $t0, 8($t1)  #raw meat
   blt $t0, 4, unwahsedT
   li  $a0, 2
