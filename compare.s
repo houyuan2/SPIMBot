@@ -7,9 +7,9 @@ Compare_current_order:
 	la		$t0, order_success
 	lw    $t0, 0($t0)
 	beq   $t0, -1, compare_end
-	beq   $t0, 0, copare_order_0
-	beq   $t0, 1, copare_order_1
-	beq   $t0, 2, copare_order_2
+	beq   $t0, 0, compare_order_0
+	beq   $t0, 1, compare_order_1
+	beq   $t0, 2, compare_order_2
 compare_order_0:
 	la 		$t0, order_fetch
 	sw 		$t0, GET_TURNIN_ORDER

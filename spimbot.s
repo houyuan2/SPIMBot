@@ -231,6 +231,7 @@ movement:
     jal update
 
     lw  $t0, location_switch
+    #sw  $t0, PRINT_INT_ADDR
     beq $t0, 0, counter_movement
     beq $t0, 1, order_movement
     beq $t0, 2, food_movement
@@ -247,7 +248,7 @@ counter_movement:
     # j counter_raw_food
     jal determineOrder
     lw  $t0, order_success
-		# sw  $t0, PRINT_INT_ADDR
+		sw  $t0, PRINT_INT_ADDR
     beq $t0, -1, counter_raw_food
     li  $t0, 1
     sw  $t0, location_switch  # set location flag to 1
@@ -442,7 +443,7 @@ u1:
   sw  $t0, location_switch
   jr  $ra
 u2:
-  li  $v0, 100
+  li  $v0, 105
   li  $v1, 60
   li  $t0, 3
   sw  $t0, location_switch
@@ -501,13 +502,13 @@ counterR:
   sw  $0, location_switch
   jr  $ra
 u3:
-  li  $v0, 180
+  li  $v0, 185
   li  $v1, 60
   li  $t0, 3
   sw  $t0, location_switch
   jr  $ra
 u4:
-  li  $v0, 240
+  li  $v0, 250
   li  $v1, 60
   li  $t0, 3
   sw  $t0, location_switch
@@ -540,7 +541,7 @@ not_same:
 	# sw    $v0, PRINT_INT_ADDR
 	li    $t4, 1
 	sw    $t4, ANGLE_CONTROL
-	add   $t4, $t4, 2
+	add   $t4, $t4, 9
 	sw    $t4, VELOCITY
 	lw    $ra, 0($sp)
 	lw    $s0, 4($sp)
@@ -705,7 +706,7 @@ compareOrder:
   #order_0
   move  $s0, $a0  #order
   move  $s1, $a1  #process
-  la  $s2, counter
+  la  $s2, shared_counter
   la  $s3, neededIngredient
   li  $t0, 0
 order0:
@@ -830,6 +831,8 @@ pickLettuce0:
   beq $t1, 4, success
   j   pickLettuce0
 success:
+  li  $t0, 5
+  sw  $t0, PRINT_INT_ADDR
   li  $v0, 1
   lw  $s0, 0($sp)  #order
   lw  $s1, 4($sp)  #process
@@ -839,6 +842,8 @@ success:
   add $sp, $sp, 20
   jr  $ra
 fail:
+li  $t0, 3
+sw  $t0, PRINT_INT_ADDR
   li  $v0, 0
   lw  $s0, 0($sp)  #order
   lw  $s1, 4($sp)  #process
@@ -1041,7 +1046,7 @@ foodbin_right_1:
     j   foodbin_switch_end
 foodbin_right_2:
     li  $a0, 290
-    li  $a1, 230
+    li  $a1, 220
     li  $t2, 0
     sw  $t2, foodbin_stage
     jal findAngle
