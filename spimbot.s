@@ -439,7 +439,7 @@ u1:
   jr  $ra
 u2:
   li  $v0, 100
-  li  $v1, 60
+  li  $v1, 55
   li  $t0, 3
   sw  $t0, location_switch
   jr  $ra
@@ -1129,7 +1129,7 @@ appliance_loop:
   bne     $t1, $t2, appliance_loop
   sw      $zero, PICKUP
   add     $t0, $t0, 1
-  j       my_loop
+  j       drop_loop
 appliance_done:
   jr      $ra
 
