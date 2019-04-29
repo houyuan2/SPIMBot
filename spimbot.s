@@ -138,16 +138,16 @@ side_finish:
   beq $t0, 0, spawn_left_app
   # set up spawn right app
   lb  $t2, 39($t1)
-  sw  $t2, right_appliance
-  lb  $t2, 42($t1)
   sw  $t2, left_appliance
+  lb  $t2, 42($t1)
+  sw  $t2, right_appliance
   j app_finish
 spawn_left_app:
   # set up spawn left app
   lb  $t2, 32($t1)
-  sw  $t2, right_appliance
-  lb  $t2, 35($t1)
   sw  $t2, left_appliance
+  lb  $t2, 35($t1)
+  sw  $t2, right_appliance
 app_finish:
   lw      $t5, side
   beq     $t5, 1, right_side_moving
@@ -1083,7 +1083,7 @@ No_order:
   lw    $ra, 0($sp)
   add   $sp, $sp, 4
   jr    $ra
-  
+
 cook:
   li      $t0, 0
 drop_loop:
