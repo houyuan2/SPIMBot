@@ -284,6 +284,10 @@ food_movement:
     jal foodbin_todo  # location flag in the applicance location
     j mission_control_end
 applicance_movement:  # finish
+    li $t0, 270
+    li $t1, 1
+    sw $t0, ANGLE
+    sw $t1, ANGLE_CONTROL
     jal cook
     li  $a0, 140
     li  $a1, 140
@@ -432,14 +436,14 @@ counter:
   sw  $0, location_switch
   jr  $ra
 u1:
-  li  $v0, 40
+  li  $v0, 50
   li  $v1, 60
   li  $t0, 3
   sw  $t0, location_switch
   jr  $ra
 u2:
   li  $v0, 100
-  li  $v1, 55
+  li  $v1, 60
   li  $t0, 3
   sw  $t0, location_switch
   jr  $ra
@@ -536,7 +540,7 @@ not_same:
 	# sw    $v0, PRINT_INT_ADDR
 	li    $t4, 1
 	sw    $t4, ANGLE_CONTROL
-	add   $t4, $t4, 9
+	add   $t4, $t4, 2
 	sw    $t4, VELOCITY
 	lw    $ra, 0($sp)
 	lw    $s0, 4($sp)
