@@ -998,16 +998,22 @@ foodbin_switch:
 foodbin_left_0:
     li  $a0, 10
     li  $a1, 70
+    li  $t2, 1
+    sw  $t2, foodbin_stage
     jal findAngle
     j   foodbin_switch_end
 foodbin_left_1:
     li  $a0, 10
     li  $a1, 150
+    li  $t2, 2
+    sw  $t2, foodbin_stage
     jal findAngle
     j   foodbin_switch_end
 foodbin_left_2:
     li  $a0, 10
     li  $a1, 230
+    li  $t2, 0
+    sw  $t2, foodbin_stage
     jal findAngle
     j   foodbin_switch_end
 foodbin_right:
@@ -1018,16 +1024,22 @@ foodbin_right:
 foodbin_right_0:
     li  $a0, 290
     li  $a1, 70
+    li  $t2, 1
+    sw  $t2, foodbin_stage
     jal findAngle
     j   foodbin_switch_end
 foodbin_right_1:
     li  $a0, 290
     li  $a1, 150
+    li  $t2, 2
+    sw  $t2, foodbin_stage
     jal findAngle
     j   foodbin_switch_end
 foodbin_right_2:
     li  $a0, 290
     li  $a1, 230
+    li  $t2, 0
+    sw  $t2, foodbin_stage
     jal findAngle
     j   foodbin_switch_end
 foodbin_switch_end:
