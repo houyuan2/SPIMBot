@@ -685,7 +685,7 @@ foodbin_end:
     jr  $ra
 
 appliance_todo:
-  sub $sp, $sp, 4
+    sub $sp, $sp, 4
 	sw  $ra, 0($sp)
 
     li $t0, 270
@@ -722,23 +722,37 @@ appliance_cheese:
     j appliance_end
 appliance_meat:
     li  $a0, 2
+    beq $t2, 0, appliance_raw_meat
+    li  $a0, 3
+appliance_raw_meat:
     jal appliance_location
     j appliance_end
 appliance_tomato:
     li  $a0, 5
+    beq $t2, 0, appliance_tomato_uncut
+    li  $a0, 6
+appliance_tomato_uncut:
     jal appliance_location
     j appliance_end
 appliance_onion:
     li  $a0, 7
+    beq $t2, 0, appliance_onion_uncut
+    li  $a0, 8
+appliance_onion_uncut:
     jal appliance_location
     j appliance_end
 appliance_lettuce:
-    beq $t2, 1, appliance_lettuce_uncut
     li  $a0, 9
+    beq $t2, 1, appliance_lettuce_uncut
+    beq $t2, 2, appliance_lettuce_finished
     jal appliance_location
     j appliance_end  
 appliance_lettuce_uncut:  
     li  $a0, 10
+    jal appliance_location
+    j appliance_end 
+appliance_lettuce_finished:
+    li  $a0, 11
     jal appliance_location
     j appliance_end 
 appliance_end:
