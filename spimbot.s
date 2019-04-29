@@ -285,7 +285,6 @@ food_movement:
     j mission_control_end
 appliance_movement:  # finish
     jal appliance_todo
-    sw  $0, location_switch # go back to counter after appliance
     j mission_control_end
 
 mission_control_end:
