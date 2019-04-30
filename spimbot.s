@@ -551,7 +551,7 @@ not_same:
 	# sw    $v0, PRINT_INT_ADDR
 	li    $t4, 1
 	sw    $t4, ANGLE_CONTROL
-	add   $t4, $t4, 4
+	add   $t4, $t4, 1
 	sw    $t4, VELOCITY
 	lw    $ra, 0($sp)
 	lw    $s0, 4($sp)
@@ -852,7 +852,7 @@ success:
   add $sp, $sp, 20
   jr  $ra
 fail:
-li  $t0, 3
+  li  $t0, 3
 # sw  $t0, PRINT_INT_ADDR
   li  $v0, 0
   lw  $s0, 0($sp)  #order
@@ -906,7 +906,7 @@ rawFood:
   sub $sp, $sp, 4
   sw  $ra, 0($sp)
   la  $t1, shared_counter
-  lw  $t0, 8($t1)  #raw meat
+  lw  $t0, 36($t1)  #raw meat
   blt $t0, 4, unwahsedT
   li  $a0, 2
   lw  $a1, left_appliance
@@ -924,7 +924,7 @@ rawFood:
   add $sp, $sp, 4
   jr  $ra
 unwahsedT:
-  lw  $t0, 20($t1)
+  lw  $t0, 24($t1)
   blt $t0, 4, uncutO
   li  $a0, 5
   lw  $a1, left_appliance
@@ -942,7 +942,7 @@ unwahsedT:
   add $sp, $sp, 4
   jr  $ra
 uncutO:
-  lw  $t0, 28($t1)
+  lw  $t0, 16($t1)
   blt $t0, 4, unWunCLettuce
   li  $a0, 7
   lw  $a1, left_appliance
@@ -960,7 +960,7 @@ uncutO:
   add $sp, $sp, 4
   jr  $ra
 unWunCLettuce:
-  lw  $t0, 36($t1)
+  lw  $t0, 8($t1)
   blt $t0, 4, UnchopL
   li  $a0, 9
   lw  $a1, left_appliance
@@ -978,7 +978,7 @@ unWunCLettuce:
   add $sp, $sp, 4
   jr  $ra
 UnchopL:
-  lw  $t0, 40($t1)
+  lw  $t0, 4($t1)
   blt $t0, 4, rawFood_end
   li  $a0, 10
   lw  $a1, left_appliance
@@ -1048,14 +1048,14 @@ foodbin_right_0:
     jal findAngle
     j   foodbin_switch_end
 foodbin_right_1:
-    li  $a0, 290
+    li  $a0, 280
     li  $a1, 150
     li  $t2, 2
     sw  $t2, foodbin_stage
     jal findAngle
     j   foodbin_switch_end
 foodbin_right_2:
-    li  $a0, 290
+    li  $a0, 280
     li  $a1, 220
     li  $t2, 0
     sw  $t2, foodbin_stage
