@@ -381,7 +381,7 @@ order1_check:
     lw $a1, 12($s1)
     la $a2, order_1
     jal decode_request
-    
+
     j order_check_finish
 order2_check:
     la  $a0, order_2
@@ -704,17 +704,17 @@ foodbin_todo:
 	sw  $ra, 0($sp)
 
   lw  $t0, GET_MONEY
-foodbin_todo_wait_money:
+  foodbin_todo_wait_money:
   bge $t0, 4, foodbin_todo_wait_money_end
   lw  $t0, GET_MONEY
   j   foodbin_todo_wait_money
-foodbin_todo_wait_money_end:
+  foodbin_todo_wait_money_end:
 
   sw  $0,  PICKUP
   sw  $0,  PICKUP
   sw  $0,  PICKUP
   sw  $0,  PICKUP
-
+  
   la  $t0, inventory
   sw  $t0, GET_INVENTORY
 
@@ -816,14 +816,14 @@ foodbin_right_0:
     jal findAngle
     j   foodbin_switch_end
 foodbin_right_1:
-    li  $a0, 280
+    li  $a0, 290
     li  $a1, 150
     li  $t2, 2
     sw  $t2, foodbin_stage
     jal findAngle
     j   foodbin_switch_end
 foodbin_right_2:
-    li  $a0, 280
+    li  $a0, 290
     li  $a1, 230
     li  $t2, 0
     sw  $t2, foodbin_stage
@@ -949,7 +949,7 @@ pick_up_loop:
   add   $t6, $t4, $t0           # t6 = address of shared_counter[j]
   lw    $t7, 0($t5)             # t7 = order[j]
   lw    $t6, 0($t6)             # t6 = shared_counter[j]
-  
+
   bne   $t7, 0, pick_up_loop_order_not_0    # order[j] == 0, do nothing
   add   $t3, $t3, 1
   j     pick_up_loop
