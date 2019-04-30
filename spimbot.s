@@ -590,7 +590,7 @@ not_same:
 	# sw    $v0, PRINT_INT_ADDR
 	li    $t4, 1
 	sw    $t4, ANGLE_CONTROL
-	add   $t4, $t4, 1
+	add   $t4, $t4, 8
 	sw    $t4, VELOCITY
 	lw    $ra, 0($sp)
 	lw    $s0, 4($sp)
@@ -606,7 +606,7 @@ rawFood:
   blt $t0, 4, unwahsedT
   li  $a0, 2
   lw  $a1, left_appliance
-  lw  $a2, left_appliance
+  lw  $a2, right_appliance
   jal appliance_location
   lw  $t3, location_switch
   bne $t3, 3, unwahsedT
@@ -816,7 +816,7 @@ foodbin_right_1:
     j   foodbin_switch_end
 foodbin_right_2:
     li  $a0, 280
-    li  $a1, 220
+    li  $a1, 230
     li  $t2, 0
     sw  $t2, foodbin_stage
     jal findAngle
