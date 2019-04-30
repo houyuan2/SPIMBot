@@ -63,7 +63,7 @@ bonk_flag:  .space 4 #0: nothing, 1: just bonked
 
 location_switch: .space 4  #0: counter, #1: order, #2: food, #3 appliance
 
-order_success: .space 4  # -1: nothing success
+order_move: .space 4  # -1: nothing success
 
 foodbin_stage: .space 4  # 0: top
 .align 4
@@ -82,12 +82,10 @@ order_fetch: .space 24
 order_0: .space 48
 order_1: .space 48
 order_2: .space 48
-process_0: .space 48
-process_1: .space 48
-process_2: .space 48
+
 counter_fetch: .space 8
 shared_counter: .space 48
-neededIngredient: .space 48
+
 
 inventory: .space 16
 .align 1
@@ -116,7 +114,7 @@ main:
 
   # set order flag
   li  $t0, -1
-  sw  $t0, order_success
+  sw  $t0, order_move
 
   # set foodbin flag
   sw  $0, foodbin_stage
@@ -246,11 +244,11 @@ counter_movement:
 
     jal update_counter
     # ignore order for debug purpose
-    j counter_raw_food
+    # j counter_raw_food
     
     # order
-    jal determineOrder
-    lw  $t0, order_success
+    # jal determineOrder
+    lw  $t0, order_move
 		# sw  $t0, PRINT_INT_ADDR
     beq $t0, -1, counter_raw_food
     li  $t0, 1
@@ -277,7 +275,7 @@ order_movement:
     # submit order if success
     sw  $0, SUBMIT_ORDER
     li  $t0, -1
-    sw  $t0, order_success  # reset order success
+    sw  $t0, order_move  # reset order success
 order_movement_end:
     li  $a0, 140
     li  $a1, 240
@@ -562,7 +560,7 @@ not_same:
 Compare_current_order:
 	sub   $sp, $sp, 4
 	sw    $ra, 0($sp)
-	la		$t0, order_success
+	la		$t0, order_move
 	lw    $t0, 0($t0)
 	beq   $t0, -1, compare_end
 	beq   $t0, 0, compare_order_0
@@ -869,9 +867,9 @@ determineOrder:
   la  $a0, order_0
   la  $a1, process_0
   jal compareOrder
-  #order_success
+  #order_move
   bne $v0, 1, order1
-  sw  $0, order_success
+  sw  $0, order_move
   lw  $ra, 0($sp)
   add $sp, $sp, 4
   jr  $ra
@@ -881,7 +879,7 @@ order1:
   jal compareOrder
   bne $v0, 1, order2
   li  $t0, 1
-  sw  $t0, order_success
+  sw  $t0, order_move
   lw  $ra, 0($sp)
   add $sp, $sp, 4
   jr  $ra
@@ -891,13 +889,13 @@ order2:
   jal compareOrder
   bne $v0, 1, noOrder
   li  $t0, 2
-  sw  $t0, order_success
+  sw  $t0, order_move
   lw  $ra, 0($sp)
   add $sp, $sp, 4
   jr  $ra
 noOrder:
   li  $t0, -1
-  sw  $t0, order_success
+  sw  $t0, order_move
   lw  $ra, 0($sp)
   add $sp, $sp, 4
   jr  $ra
@@ -1069,7 +1067,7 @@ foodbin_switch_end:
 Move_to_order_place:
   sub   $sp, $sp, 4
   sw    $ra, 0($sp)
-  lw    $t0, order_success
+  lw    $t0, order_move
   beq   $t0, -1, No_order
   beq   $t0, 0, move_to_order_0
   beq   $t0, 1, move_to_order_1
