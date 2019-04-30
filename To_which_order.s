@@ -38,16 +38,75 @@ pick_order:
 pick_up_less_than_four:
   # pick up one time
   # only one sw instruction here
+  move  $a0, $t3
+  jal   Food_id_decoder
+  sw    $v0, PICKUP
   sub   $t7, $t7, 1
   bgt   $t7, 0, pick_up_less_than_four
   sw    $zero, 0($t5)
+  sw    $t2, order_move
   j     pick_up_done
 up_to_four:
   # pick up 4 times here
   # should be 4 sw instructions here
+  move  $a0, $t3
+  jal   Food_id_decoder
+  sw    $v0, PICKUP
+  sw    $v0, PICKUP
+  sw    $v0, PICKUP
+  sw    $v0, PICKUP
   sub   $t7, $t7, 4
   sw    $t7, 0($t5)
+  sw    $t2, order_move
 pick_up_done:
   lw    $ra, 0($sp)
   add   $sp, $sp, 4
   jr    $ra
+
+
+Food_id_decoder:
+  # a0 = index of food in 12
+  sub   $sp, $sp, 4
+  sw    $ra, 0($sp)
+  beq   $a0, 0, lettuce_pickup_code
+  beq   $a0, 3, onion_pickup_code
+  beq   $a0, 5, tomato_pickup_code
+  beq   $a0, 8, meat_pickup_code
+  beq   $a0, 10, cheese_pickup_code
+  beq   $a0, 11, bread_pickup_code
+decoder_done:
+  lw    $ra, 0($sp)
+  add   $sp, $sp, 4
+  jr    $ra
+lettuce_pickup_code:
+  li    $t0, 5
+  sll   $t0, $t0, 16
+  add   $t0, $t0, 2
+  move  $v0, $t0
+  j     decoder_done
+onion_pickup_code:
+  li    $t0, 4
+  sll   $t0, $t0, 16
+  add   $t0, $t0, 1
+  move  $v0, $t0
+  j     decoder_done
+tomato_pickup_code:
+  li    $t0, 3
+  sll   $t0, $t0, 16
+  add   $t0, $t0, 1
+  move  $v0, $t0
+  j     decoder_done
+meat_pickup_code:
+  li    $t0, 2
+  sll   $t0, $t0, 16
+  add   $t0, $t0, 1
+  move  $v0, $t0
+  j     decoder_done
+cheese_pickup_code:
+  li    $t0, 1
+  sll   $t0, $t0, 16
+  move  $v0, $t0
+  j     decoder_done
+bread_pickup_code:
+  li    $v0, 0
+  j     decoder_done
