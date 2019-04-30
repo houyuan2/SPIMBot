@@ -288,17 +288,11 @@ counter_food_bin:
     sw  $t0, location_switch  # set location flag to 2
     j mission_control_end
 order_movement:
-    jal Compare_current_order
-    beq $v0, 0, order_movement_end  # do nothing if compare fails
-    # submit order if success
-    sw  $0, SUBMIT_ORDER
-    li  $t0, -1
-    sw  $t0, order_move  # reset order success
-order_movement_end:
+    jal order_todo
+    sw  $0, location_switch # go back to counter after order
     li  $a0, 140
     li  $a1, 240
     jal findAngle # moveback to counter
-    sw  $0, location_switch # go back to counter after order
     j mission_control_end
 food_movement:
     jal foodbin_todo  # location flag in the appliance location
@@ -324,69 +318,6 @@ mission_control_end:
     add $sp, $sp, 20
     jr $ra
 
-update:
-    sub   $sp, $sp, 12
-	  sw    $ra, 0($sp)
-	  sw    $s0, 4($sp)
-	  sw    $s1, 8($sp)
-
-    # update order infor
-    la $s0, order_fetch
-    sw $s0, GET_TURNIN_ORDER
-
-    lw $a0, 0($s0)
-    lw $a1, 4($s0)
-    la $a2, order_0
-    jal decode_request
-
-    lw $a0, 8($s0)
-    lw $a1, 12($s0)
-    la $a2, order_1
-    jal decode_request
-
-    lw $a0, 16($s0)
-    lw $a1, 20($s0)
-    la $a2, order_2
-    jal decode_request
-
-    # update process infor
-    la $s0, order_fetch
-    sw $s0, GET_TURNIN_USERS
-
-    lw $a0, 0($s0)
-    lw $a1, 4($s0)
-    la $a2, process_0
-    jal decode_request
-
-    lw $a0, 8($s0)
-    lw $a1, 12($s0)
-    la $a2, process_1
-    jal decode_request
-
-    lw $a0, 16($s0)
-    lw $a1, 20($s0)
-    la $a2, process_2
-    jal decode_request
-
-    # clear neededIngredient
-    li  $t0, 0
-    la  $t2, neededIngredient
-array_clean_loop:
-    bge $t0, 12, array_clean_finish
-    mul $t1, $t0, 4
-    add $t1, $t2, $t1
-    sw  $0, 0($t1)
-
-    add $t0, $t0, 1
-    j array_clean_loop
-array_clean_finish:
-
-  lw    $ra, 0($sp)
-	lw    $s0, 4($sp)
-	lw    $s1, 8($sp)
-	add   $sp, $sp, 12
-	jr		$ra
-
 update_counter:
     sub $sp, $sp, 4
     sw  $ra, 0($sp)
@@ -402,6 +333,100 @@ update_counter:
     lw  $ra, 0($sp)
     add $sp, $sp, 4
     jr  $ra
+
+order_todo:
+    sub $sp, $sp, 12
+    sw  $ra, 0($sp)
+    sw  $s0, 4($sp)
+    sw  $s1, 8($sp)
+
+    # drop off all items
+    li  $t0, 1
+    li  $t1, 2
+    li  $t2, 3
+    sw  $0, DROPOFF
+    sw  $t0, DROPOFF
+    sw  $t1, DROPOFF
+    sw  $t2, DROPOFF
+
+    lw  $s0, order_move
+    beq $s0, 0, order0_check
+    beq $s0, 1, order1_check
+    beq $s0, 2, order2_check
+order0_check:
+    la  $a0, order_0
+    jal all_zero_check
+    beq $v0, 0, order_check_finish
+    # submit order and update
+    sw  $0, SUBMIT_ORDER
+
+    la $s1, order_fetch
+    sw $s1, GET_TURNIN_ORDER
+
+    lw $a0, 0($s1)
+    lw $a1, 4($s1)
+    la $a2, order_0
+    jal decode_request
+
+    j order_check_finish
+order1_check:
+    la  $a0, order_1
+    jal all_zero_check
+    beq $v0, 0, order_check_finish
+    # submit order and update
+    sw  $0, SUBMIT_ORDER
+
+    la $s1, order_fetch
+    sw $s1, GET_TURNIN_ORDER
+
+    lw $a0, 8($s1)
+    lw $a1, 12($s1)
+    la $a2, order_1
+    jal decode_request
+    
+    j order_check_finish
+order2_check:
+    la  $a0, order_2
+    jal all_zero_check
+
+    beq $v0, 0, order_check_finish
+    # submit order and update
+    sw  $0, SUBMIT_ORDER
+
+    la $s1, order_fetch
+    sw $s1, GET_TURNIN_ORDER
+
+    lw $a0, 16($s1)
+    lw $a1, 20($s1)
+    la $a2, order_2
+    jal decode_request
+
+    j order_check_finish
+order_check_finish:
+    li  $t0, -1
+    sw  $t0, order_move  # reset order move
+
+order_todo_end:
+    lw  $ra, 0($sp)
+    lw  $s0, 4($sp)
+    lw  $s1, 8($sp)
+    add $sp, $sp, 12
+    jr  $ra
+
+all_zero_check:
+    li  $v0, 1
+    li  $t0, 0
+all_zero_check_loop:
+    blt $t0, 12, all_zero_check_finish
+    mul $t1, $t0, 4
+    add $t1, $t1, $a0
+    lw  $t2, 0($t1)
+    add $t0, $t0, 1
+    beq $t2, 0, all_zero_check_loop
+    li  $v0, 0
+    j   all_zero_check_finish
+all_zero_check_finish:
+    jr $ra
 
 #
 #check appliance, return next location, $a0 food id  $a1 id of first appliance, $a2 id of the second appliance
@@ -575,86 +600,6 @@ not_same:
 	add   $sp, $sp, 12
 	jr		$ra
 
-Compare_current_order:
-	sub   $sp, $sp, 4
-	sw    $ra, 0($sp)
-	la		$t0, order_move
-	lw    $t0, 0($t0)
-	beq   $t0, -1, compare_end
-	beq   $t0, 0, compare_order_0
-	beq   $t0, 1, compare_order_1
-	beq   $t0, 2, compare_order_2
-compare_order_0:
-	la 		$t0, order_fetch
-	sw 		$t0, GET_TURNIN_ORDER
-	lw 		$a0, 0($t0)
-	lw 		$a1, 4($t0)
-	la 		$a2, order_0
-	jal 	decode_request
-	la 		$t0, order_fetch
-	sw 		$t0, GET_TURNIN_USERS
-	lw 		$a0, 0($t0)
-	lw 		$a1, 4($t0)
-	la 		$a2, process_0
-	jal 	decode_request
-	la    $t0, order_0
-	la    $t1, process_0
-	li    $t2, 0
-	j     compare_loop
-compare_order_1:
-	la 		$t0, order_fetch
-	sw 		$t0, GET_TURNIN_ORDER
-	lw 		$a0, 0($t0)
-	lw 		$a1, 4($t0)
-	la 		$a2, order_1
-	jal 	decode_request
-	la 		$t0, order_fetch
-	sw 		$t0, GET_TURNIN_USERS
-	lw 		$a0, 0($t0)
-	lw 		$a1, 4($t0)
-	la 		$a2, process_1
-	jal 	decode_request
-	la    $t0, order_1
-	la    $t1, process_1
-	li    $t2, 0
-	j     compare_loop
-compare_order_2:
-	la 		$t0, order_fetch
-	sw 		$t0, GET_TURNIN_ORDER
-	lw 		$a0, 0($t0)
-	lw 		$a1, 4($t0)
-	la 		$a2, order_2
-	jal 	decode_request
-	la 		$t0, order_fetch
-	sw 		$t0, GET_TURNIN_USERS
-	lw 		$a0, 0($t0)
-	lw 		$a1, 4($t0)
-	la 		$a2, process_2
-	jal 	decode_request
-	la    $t0, order_2
-	la    $t1, process_2
-	li    $t2, 0
-compare_loop:
-	bge   $t2, 12, compare_pass
-	mul   $t3, $t2, 4
-	add   $t4, $t3, $t0
-	add   $t5, $t3, $t1
-	lw    $t4, 0($t4)
-	lw    $t5, 0($t5)
-	add   $t2, $t2, 1
-	bne   $t4, $t5, compare_end
-	j     compare_loop
-compare_pass:
-	li    $v0, 1
-	lw    $ra, 0($sp)
-	add   $sp, $sp, 4
-	jr    $ra
-compare_end:
-	li    $v0, 0
-	lw    $ra, 0($sp)
-	add   $sp, $sp, 4
-	jr    $ra
-
 foodbin_todo:
   sub $sp, $sp, 4
 	sw  $ra, 0($sp)
@@ -718,306 +663,6 @@ foodbin_end:
     lw  $ra, 0($sp)
     add $sp, $sp, 4
     jr  $ra
-
-  #pass $a0 as order $a1 as process
-compareOrder:
-  sub $sp, $sp, 20
-  sw  $s0, 0($sp)  #order
-  sw  $s1, 4($sp)  #process
-  sw  $s2, 8($sp)  #shared counter
-  sw  $s3, 12($sp)
-	sw  $ra, 16($sp)
-  #array from global
-
-  #order_0
-  move  $s0, $a0  #order
-  move  $s1, $a1  #process
-  la  $s2, shared_counter
-  la  $s3, neededIngredient
-  li  $t0, 0
-order0:
-  bge $t0, 12, compare_0  #0<12
-  mul $t1, $t0, 4 #i*4
-  add $t2, $s0, $t1 #order
-  add $t3, $s1, $t1 #process
-  add $t4, $s3, $t1 #ingredient
-  lw  $t2, 0($t2)   #order[i]
-  lw  $t3, 0($t3)   #process[i]
-  sub $t5, $t2, $t3 #order[i] - process[i]
-  sw  $t5, 0($t4)  #neededingredient[i]
-  add $t0, $t0, 1
-  j   order0
-
-compare_0:
-#bread 0
-  lw  $t2, 0($s2) #counter
-  lw  $t3, 0($s3) #needed
-  bgt $t3, $t2, fail #needed > counter, fail
-#cheese 1
-  lw  $t2, 4($s2)
-  lw  $t3, 4($s3)
-  bgt $t3, $t2, fail
-#meat 3
-  lw  $t2, 12($s2)
-  lw  $t3, 12($s3)
-  bgt $t3, $t2, fail
-#tomato
-  lw  $t2, 24($s2)
-  lw  $t3, 24($s3)
-  bgt $t3, $t2, fail
-#onion
-  lw  $t2, 32($s2)
-  lw  $t3, 32($s3)
-  bgt $t3, $t2, fail
-#lettuce
-  lw  $t2, 44($s2)
-  lw  $t3, 44($s3)
-  bgt $t3, $t2, fail
-
-  #order0 can be finished
-  li  $t1, 0 #hold
-  lw  $t3, 0($s3)  #needed bread
-  beq $t3, 0, cheese0  #if bread needed = 0, go to cheese
-  li  $t0, 0
-  li  $t4, 0
-  sll $t0, $t0, 16 #bread
-pickBread0:
-  bge $t4, $t3, cheese0
-  sw  $t0, PICKUP
-  add $t1, $t1, 1 #hold+=1
-  add $t4, $t4, 1
-  j   pickBread0
-cheese0:
-  lw  $t3, 4($s3) #cheese needed
-  beq $t3, 0, meat0
-  li  $t0, 1
-  sll $t0, $t0, 16
-  li  $t4, 0
-pickCheese0:
-  bge $t4, $t3, meat0
-  sw  $t0, PICKUP
-  add $t1, $t1, 1
-  add $t4, $t4, 1
-  beq $t1, 4, success
-  j   pickCheese0
-meat0:
-  lw  $t3, 12($s3) #meat needed
-  beq $t3, 0, tomato0
-  li  $t0, 1
-  sll $t0, $t0, 16
-  add $t0, $t0, 1
-  li  $t4, 0
-pickMeat0:
-  bge $t4, $t3, tomato0
-  sw  $t0, PICKUP
-  add $t1, $t1, 1
-  add $t4, $t4, 1
-  beq $t1, 4, success
-  j   pickMeat0
-tomato0:
-  lw  $t3, 24($s3) #tomato needed
-  beq $t3, 0, onion0
-  li  $t0, 1
-  sll $t0, $t0, 16
-  add $t0, $t0, 1
-  li  $t4, 0
-pickTomato0:
-  bge $t4, $t3, onion0
-  sw  $t0, PICKUP
-  add $t1, $t1, 1
-  add $t4, $t4, 1
-  beq $t1, 4, success
-  j   pickTomato0
-onion0:
-  lw  $t3, 32($s3) #tomato needed
-  beq $t3, 0, lettuce0
-  li  $t0, 1
-  sll $t0, $t0, 16
-  add $t0, $t0, 1
-  li  $t4, 0
-pickOnion0:
-  bge $t4, $t3, lettuce0
-  sw  $t0, PICKUP
-  add $t1, $t1, 1
-  beq $t1, 4, success
-  add $t4, $t4, 1
-  j   pickOnion0
-lettuce0:
-  lw  $t3, 44($s3) #lettuce needed
-  beq $t3, 0, success
-  li  $t0, 1
-  sll $t0, $t0, 16
-  add $t0, $t0, 2
-  li  $t4, 0
-pickLettuce0:
-  bge $t4, $t3, success
-  sw  $t0, PICKUP
-  add $t1, $t1, 1
-  add $t4, $t4, 1
-  beq $t1, 4, success
-  j   pickLettuce0
-success:
-  li  $t0, 5
-  # sw  $t0, PRINT_INT_ADDR
-  li  $v0, 1
-  lw  $s0, 0($sp)  #order
-  lw  $s1, 4($sp)  #process
-  lw  $s2, 8($sp)  #shared counter
-  lw  $s3, 12($sp)
-	lw  $ra, 16($sp)
-  add $sp, $sp, 20
-  jr  $ra
-fail:
-  li  $t0, 3
-# sw  $t0, PRINT_INT_ADDR
-  li  $v0, 0
-  lw  $s0, 0($sp)  #order
-  lw  $s1, 4($sp)  #process
-  lw  $s2, 8($sp)  #shared counter
-  lw  $s3, 12($sp)
-	lw  $ra, 16($sp)
-  add $sp, $sp, 20
-  jr  $ra
-
-determineOrder:
-  sub $sp, $sp, 4
-  sw  $ra, 0($sp)
-  la  $a0, order_0
-  la  $a1, process_0
-  jal compareOrder
-  #order_move
-  bne $v0, 1, order1
-  sw  $0, order_move
-  lw  $ra, 0($sp)
-  add $sp, $sp, 4
-  jr  $ra
-order1:
-  la  $a0, order_1
-  la  $a1, process_1
-  jal compareOrder
-  bne $v0, 1, order2
-  li  $t0, 1
-  sw  $t0, order_move
-  lw  $ra, 0($sp)
-  add $sp, $sp, 4
-  jr  $ra
-order2:
-  la  $a0, order_2
-  la  $a1, process_2
-  jal compareOrder
-  bne $v0, 1, noOrder
-  li  $t0, 2
-  sw  $t0, order_move
-  lw  $ra, 0($sp)
-  add $sp, $sp, 4
-  jr  $ra
-noOrder:
-  li  $t0, -1
-  sw  $t0, order_move
-  lw  $ra, 0($sp)
-  add $sp, $sp, 4
-  jr  $ra
-
-rawFood:
-  sub $sp, $sp, 4
-  sw  $ra, 0($sp)
-  la  $t1, shared_counter
-  lw  $t0, 36($t1)  #raw meat
-  blt $t0, 4, unwahsedT
-  li  $a0, 2
-  lw  $a1, left_appliance
-  lw  $a2, left_appliance
-  jal appliance_location
-  lw  $t3, location_switch
-  bne $t3, 3, unwahsedT
-  li  $t2, 2
-  sll $t2, $t2, 16
-  sw  $t2, PICKUP
-  sw  $t2, PICKUP
-  sw  $t2, PICKUP
-  sw  $t2, PICKUP
-  lw  $ra, 0($sp)
-  add $sp, $sp, 4
-  jr  $ra
-unwahsedT:
-  lw  $t0, 24($t1)
-  blt $t0, 4, uncutO
-  li  $a0, 5
-  lw  $a1, left_appliance
-  lw  $a2, right_appliance
-  jal appliance_location
-  lw  $t3, location_switch
-  bne $t3, 3, uncutO
-  li  $t2, 3
-  sll $t2, $t2, 16
-  sw  $t2, PICKUP
-  sw  $t2, PICKUP
-  sw  $t2, PICKUP
-  sw  $t2, PICKUP
-  lw  $ra, 0($sp)
-  add $sp, $sp, 4
-  jr  $ra
-uncutO:
-  lw  $t0, 16($t1)
-  blt $t0, 4, unWunCLettuce
-  li  $a0, 7
-  lw  $a1, left_appliance
-  lw  $a2, right_appliance
-  jal appliance_location
-  lw  $t3, location_switch
-  bne $t3, 3, unWunCLettuce
-  li  $t2, 4
-  sll $t2, $t2, 16
-  sw  $t2, PICKUP
-  sw  $t2, PICKUP
-  sw  $t2, PICKUP
-  sw  $t2, PICKUP
-  lw  $ra, 0($sp)
-  add $sp, $sp, 4
-  jr  $ra
-unWunCLettuce:
-  lw  $t0, 8($t1)
-  blt $t0, 4, UnchopL
-  li  $a0, 9
-  lw  $a1, left_appliance
-  lw  $a2, right_appliance
-  jal appliance_location
-  lw  $t3, location_switch
-  bne $t3, 3, UnchopL
-  li  $t2, 5
-  sll $t2, $t2, 16
-  sw  $t2, PICKUP
-  sw  $t2, PICKUP
-  sw  $t2, PICKUP
-  sw  $t2, PICKUP
-  lw  $ra, 0($sp)
-  add $sp, $sp, 4
-  jr  $ra
-UnchopL:
-  lw  $t0, 4($t1)
-  blt $t0, 4, rawFood_end
-  li  $a0, 10
-  lw  $a1, left_appliance
-  lw  $a2, right_appliance
-  jal appliance_location
-  lw  $t3, location_switch
-  bne $t3, 3, rawFood_end
-  li  $t2, 5
-  sll $t2, $t2, 16
-  add $t2, $t2, 1
-  sw  $t2, PICKUP
-  sw  $t2, PICKUP
-  sw  $t2, PICKUP
-  sw  $t2, PICKUP
-  lw  $ra, 0($sp)
-  add $sp, $sp, 4
-  jr  $ra
-rawFood_end:
-  li  $v0, -1
-  li  $v1, -1
-  lw  $ra, 0($sp)
-  add $sp, $sp, 4
-  jr  $ra
 
 foodbin_switch:
     sub $sp, $sp, 4
