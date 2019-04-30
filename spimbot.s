@@ -63,7 +63,7 @@ bonk_flag:  .space 4 #0: nothing, 1: just bonked
 
 location_switch: .space 4  #0: counter, #1: order, #2: food, #3 appliance
 
-order_move: .space 4  # -1: nothing success
+order_move: .space 4  # -1: nothing move
 
 foodbin_stage: .space 4  # 0: top
 .align 4
@@ -85,7 +85,6 @@ order_2: .space 48
 
 counter_fetch: .space 8
 shared_counter: .space 48
-
 
 inventory: .space 16
 .align 1
@@ -118,6 +117,25 @@ main:
 
   # set foodbin flag
   sw  $0, foodbin_stage
+
+  # set up order infor
+  la $s0, order_fetch
+  sw $s0, GET_TURNIN_ORDER
+
+  lw $a0, 0($s0)
+  lw $a1, 4($s0)
+  la $a2, order_0
+  jal decode_request
+
+  lw $a0, 8($s0)
+  lw $a1, 12($s0)
+  la $a2, order_1
+  jal decode_request
+
+  lw $a0, 16($s0)
+  lw $a1, 20($s0)
+  la $a2, order_2
+  jal decode_request
 
   # set up left or right flag
   lw  $t0, BOT_X
