@@ -903,11 +903,10 @@ noOrder:
   jr  $ra
 
 rawFood:
-  sub $sp, $sp, 0
+  sub $sp, $sp, 4
   sw  $ra, 0($sp)
-  sw  $s0, 4($sp)
-  la  $s0, shared_counter
-  lw  $t0, 36($s0)  #raw meat
+  la  $t1, shared_counter
+  lw  $t0, 8($t1)  #raw meat
   blt $t0, 4, unwahsedT
   li  $a0, 2
   lw  $a1, left_appliance
@@ -921,9 +920,11 @@ rawFood:
   sw  $t2, PICKUP
   sw  $t2, PICKUP
   sw  $t2, PICKUP
-  j   rawFood_end
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
+  jr  $ra
 unwahsedT:
-  lw  $t0, 24($s0)
+  lw  $t0, 20($t1)
   blt $t0, 4, uncutO
   li  $a0, 5
   lw  $a1, left_appliance
@@ -937,9 +938,11 @@ unwahsedT:
   sw  $t2, PICKUP
   sw  $t2, PICKUP
   sw  $t2, PICKUP
-  j   rawFood_end
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
+  jr  $ra
 uncutO:
-  lw  $t0, 16($s0)
+  lw  $t0, 28($t1)
   blt $t0, 4, unWunCLettuce
   li  $a0, 7
   lw  $a1, left_appliance
@@ -953,9 +956,11 @@ uncutO:
   sw  $t2, PICKUP
   sw  $t2, PICKUP
   sw  $t2, PICKUP
-  j   rawFood_end
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
+  jr  $ra
 unWunCLettuce:
-  lw  $t0, 8($s0)
+  lw  $t0, 36($t1)
   blt $t0, 4, UnchopL
   li  $a0, 9
   lw  $a1, left_appliance
@@ -969,16 +974,18 @@ unWunCLettuce:
   sw  $t2, PICKUP
   sw  $t2, PICKUP
   sw  $t2, PICKUP
-  j   rawFood_end
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
+  jr  $ra
 UnchopL:
-  lw  $t0, 4($s0)
-  blt $t0, 4, rawFood_nothing
+  lw  $t0, 40($t1)
+  blt $t0, 4, rawFood_end
   li  $a0, 10
   lw  $a1, left_appliance
   lw  $a2, right_appliance
   jal appliance_location
   lw  $t3, location_switch
-  bne $t3, 3, rawFood_nothing
+  bne $t3, 3, rawFood_end
   li  $t2, 5
   sll $t2, $t2, 16
   add $t2, $t2, 1
@@ -986,14 +993,14 @@ UnchopL:
   sw  $t2, PICKUP
   sw  $t2, PICKUP
   sw  $t2, PICKUP
-  j   rawFood_end
-rawFood_nothing:
+  lw  $ra, 0($sp)
+  add $sp, $sp, 4
+  jr  $ra
+rawFood_end:
   li  $v0, -1
   li  $v1, -1
-rawFood_end:
   lw  $ra, 0($sp)
-  lw  $s0, 4($sp)
-  add $sp, $sp, 8
+  add $sp, $sp, 4
   jr  $ra
 
 foodbin_switch:
