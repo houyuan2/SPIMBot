@@ -551,7 +551,7 @@ counterR:
   sw  $0, location_switch
   jr  $ra
 u3:
-  li  $v0, 195
+  li  $v0, 190
   li  $v1, 60
   li  $t0, 3
   sw  $t0, location_switch
@@ -714,7 +714,19 @@ foodbin_todo:
   sw  $0,  PICKUP
   sw  $0,  PICKUP
   sw  $0,  PICKUP
-  
+  lw  $t5, BOT_Y
+  add $t7, $t5, 15
+  li  $t6, 90
+  sw  $t6, ANGLE
+  li  $t6, 1
+  sw  $t6, ANGLE_CONTROL
+  li  $t6, 10
+  sw  $t6, VELOCITY
+bonk_debug:
+  lw  $t5, BOT_Y
+  blt $t5, $t7, bonk_debug
+  li  $t6, 0
+  sw  $t6, VELOCITY
   la  $t0, inventory
   sw  $t0, GET_INVENTORY
 
