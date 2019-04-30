@@ -704,29 +704,64 @@ foodbin_todo:
 	sw  $ra, 0($sp)
 
   lw  $t0, GET_MONEY
-  foodbin_todo_wait_money:
+foodbin_todo_wait_money:
   bge $t0, 4, foodbin_todo_wait_money_end
   lw  $t0, GET_MONEY
   j   foodbin_todo_wait_money
-  foodbin_todo_wait_money_end:
+foodbin_todo_wait_money_end:
 
   sw  $0,  PICKUP
   sw  $0,  PICKUP
   sw  $0,  PICKUP
   sw  $0,  PICKUP
-  lw  $t5, BOT_Y
-  add $t7, $t5, 15
-  li  $t6, 90
-  sw  $t6, ANGLE
-  li  $t6, 1
-  sw  $t6, ANGLE_CONTROL
-  li  $t6, 10
-  sw  $t6, VELOCITY
-bonk_debug:
-  lw  $t5, BOT_Y
-  blt $t5, $t7, bonk_debug
-  li  $t6, 0
-  sw  $t6, VELOCITY
+
+#   lw  $t5, BOT_Y
+#   add $t7, $t5, 15
+#   li  $t6, 90
+#   sw  $t6, ANGLE
+#   li  $t6, 1
+#   sw  $t6, ANGLE_CONTROL
+#   li  $t6, 10
+#   sw  $t6, VELOCITY
+# bonk_debug:
+#   lw  $t5, BOT_Y
+#   blt $t5, $t7, bonk_debug
+#   li  $t6, 0
+#   sw  $t6, VELOCITY
+  lw  $t0, side
+  beq $t0, 1, foodbin_todo_move_right
+foodbin_todo_move_left:
+  lw  $t0, BOT_X
+  add $t0, $t0, 20
+  sw  $0, ANGLE
+  li  $t1, 1
+  sw  $t1, ANGLE_CONTROL
+  li  $t1, 10
+  sw  $t1, VELOCITY
+  lw  $t2, BOT_X
+foodbin_todo_move_left_loop:
+  bge $t2, $t0, foodbin_todo_move_finish
+  lw  $t2, BOT_X
+  j   foodbin_todo_move_left_loop
+foodbin_todo_move_right:
+  lw  $t0, BOT_X
+  sub $t0, $t0, 20
+  li  $t1, 180
+  sw  $t1, ANGLE
+  li  $t1, 1
+  sw  $t1, ANGLE_CONTROL
+  li  $t1, 10
+  sw  $t1, VELOCITY
+  lw  $t2, BOT_X
+foodbin_todo_move_right_loop:
+  ble $t2, $t0, foodbin_todo_move_finish
+  lw  $t2, BOT_X
+  j   foodbin_todo_move_right_loop
+
+foodbin_todo_move_finish:
+  sw  $0, VELOCITY  
+  sw  $0, bonk_flag # set bonkflag to 0
+
   la  $t0, inventory
   sw  $t0, GET_INVENTORY
 
