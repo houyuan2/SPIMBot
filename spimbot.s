@@ -227,7 +227,7 @@ movement:
     lw  $t0, bonk_flag
     beq $t0, 0, mission_control_end # do nothing if not bonked
     sw  $0, bonk_flag   # set bonk flag back to 0
-    jal update
+    # jal update
 
     lw  $t0, location_switch
     #sw  $t0, PRINT_INT_ADDR
@@ -245,10 +245,13 @@ counter_movement:
     sw  $t2, DROPOFF
 
     jal update_counter
+    # ignore order for debug purpose
+    j counter_raw_food
+    
     # order
     jal determineOrder
     lw  $t0, order_success
-		sw  $t0, PRINT_INT_ADDR
+		# sw  $t0, PRINT_INT_ADDR
     beq $t0, -1, counter_raw_food
     li  $t0, 1
     sw  $t0, location_switch  # set location flag to 1
@@ -547,7 +550,7 @@ not_same:
 	# sw    $v0, PRINT_INT_ADDR
 	li    $t4, 1
 	sw    $t4, ANGLE_CONTROL
-	add   $t4, $t4, 9
+	add   $t4, $t4, 4
 	sw    $t4, VELOCITY
 	lw    $ra, 0($sp)
 	lw    $s0, 4($sp)
@@ -838,7 +841,7 @@ pickLettuce0:
   j   pickLettuce0
 success:
   li  $t0, 5
-  sw  $t0, PRINT_INT_ADDR
+  # sw  $t0, PRINT_INT_ADDR
   li  $v0, 1
   lw  $s0, 0($sp)  #order
   lw  $s1, 4($sp)  #process
@@ -849,7 +852,7 @@ success:
   jr  $ra
 fail:
 li  $t0, 3
-sw  $t0, PRINT_INT_ADDR
+# sw  $t0, PRINT_INT_ADDR
   li  $v0, 0
   lw  $s0, 0($sp)  #order
   lw  $s1, 4($sp)  #process
