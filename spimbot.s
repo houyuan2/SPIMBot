@@ -86,6 +86,7 @@ order_2: .space 48
 counter_fetch: .space 8
 shared_counter: .space 48
 
+item_num: .space 4
 inventory: .space 16
 .align 1
 layout: .space 225
@@ -337,14 +338,15 @@ order_todo:
     sw  $s1, 8($sp)
 
     # drop off all items
-    li  $t0, 1
-    li  $t1, 2
-    li  $t2, 3
-    sw  $0, DROPOFF
+    lw  $t0, item_num
+    ble $t0, 4, order_item_drop_loop  # change to 4 if item num greater than 4
+    li  $t0, 4
+order_item_drop_loop:
+    beq $t0, 0, order_item_drop_end
+    sub $t0, $t0, 1
     sw  $t0, DROPOFF
-    sw  $t1, DROPOFF
-    sw  $t2, DROPOFF
-
+    j   order_item_drop_loop
+order_item_drop_end:
     lw  $s0, order_move
     beq $s0, 0, order0_check
     beq $s0, 1, order1_check
@@ -413,7 +415,7 @@ all_zero_check:
     li  $v0, 1
     li  $t0, 0
 all_zero_check_loop:
-    blt $t0, 12, all_zero_check_finish
+    bge $t0, 12, all_zero_check_finish
     mul $t1, $t0, 4
     add $t1, $t1, $a0
     lw  $t2, 0($t1)
@@ -951,6 +953,7 @@ determine_next_order:
   add   $t2, $t2, 1
   j     determine_order_loop
 pick_order:
+  sw    $t7, item_num
   bge   $t7, 4, up_to_four
 pick_up_less_than_four:
   # pick up one time
