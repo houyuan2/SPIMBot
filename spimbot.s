@@ -939,8 +939,9 @@ pick_up_loop:
   add   $t6, $t4, $t0           # t6 = address of shared_counter[j]
   lw    $t7, 0($t5)             # t7 = order[j]
   lw    $t6, 0($t6)             # t6 = shared_counter[j]
-  ble   $t7, $t6, pick_order
   add   $t3, $t3, 1
+  beq   $t7, 0, pick_up_loop    # order[j] == 0, do nothing
+  ble   $t7, $t6, pick_order
   j     pick_up_loop
 determine_next_order:
   add   $t2, $t2, 1
