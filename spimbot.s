@@ -481,7 +481,7 @@ u2chop:
   bne $a2, 6, counter
   j   u2
 counter:
-  li  $v0, 120  #x=7
+  li  $v0, 140  #x=7
   li  $v1, 140  #y=6
   sw  $0, location_switch
   jr  $ra
@@ -551,7 +551,7 @@ counterR:
   sw  $0, location_switch
   jr  $ra
 u3:
-  li  $v0, 185
+  li  $v0, 195
   li  $v1, 60
   li  $t0, 3
   sw  $t0, location_switch
@@ -590,7 +590,7 @@ not_same:
 	# sw    $v0, PRINT_INT_ADDR
 	li    $t4, 1
 	sw    $t4, ANGLE_CONTROL
-	add   $t4, $t4, 8
+	li    $t4, 9
 	sw    $t4, VELOCITY
 	lw    $ra, 0($sp)
 	lw    $s0, 4($sp)
@@ -702,6 +702,14 @@ rawFood_end:
 foodbin_todo:
   sub $sp, $sp, 4
 	sw  $ra, 0($sp)
+
+  lw  $t0, GET_MONEY
+foodbin_todo_wait_money:
+  bge $t0, 4, foodbin_todo_wait_money_end
+  lw  $t0, GET_MONEY
+  j   foodbin_todo_wait_money
+foodbin_todo_wait_money_end:
+
   sw  $0,  PICKUP
   sw  $0,  PICKUP
   sw  $0,  PICKUP
@@ -837,7 +845,7 @@ Move_to_order_place:
 move_to_order_0:
   lw    $t1, side
   beq   $t1, 1, right_side_order_0
-  li    $a0, 40
+  li    $a0, 120
   li    $a1, 280
   jal   findAngle
   j     No_order
@@ -861,7 +869,7 @@ right_side_order_1:
 move_to_order_2:
   lw    $t1, side
   beq   $t1, 1, right_side_order_2
-  li    $a0, 120
+  li    $a0, 40
   li    $a1, 280
   jal   findAngle
   j     No_order
